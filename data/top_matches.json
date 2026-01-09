@@ -1,0 +1,319 @@
+{
+  "P001": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    }
+  ],
+  "P002": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    }
+  ],
+  "P003": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 4,
+      "reasons": [
+        "Breast cancer focus",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    }
+  ],
+  "P004": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    }
+  ],
+  "P005": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 5,
+      "reasons": [
+        "Breast cancer focus",
+        "Age information available",
+        "Confirmed malignancy"
+      ],
+      "match_percentage": 100.0
+    }
+  ],
+  "P006": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "raw_score": 1,
+      "reasons": [
+        "Age information available"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "raw_score": 1,
+      "reasons": [
+        "Age information available"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "raw_score": 1,
+      "reasons": [
+        "Age information available"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "raw_score": 1,
+      "reasons": [
+        "Age information available"
+      ],
+      "match_percentage": 100.0
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "raw_score": 1,
+      "reasons": [
+        "Age information available"
+      ],
+      "match_percentage": 100.0
+    }
+  ]
+}

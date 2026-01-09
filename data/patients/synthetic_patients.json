@@ -1,0 +1,26 @@
+[
+  {
+    "patient_id": "P001",
+    "summary": "A 33-year-old woman was admitted to hospital with a left breast mass that had appeared more than a year earlier. She was a second-time pregnant woman with a single live intrauterine fetus at 23 + 4 weeks of gestation. During the examination of the left breast, a 6 by 8 cm sized mass can be observed on the upper outer quadrant."
+  },
+  {
+    "patient_id": "P002",
+    "summary": "This case report presents a patient with breast cancer that metastasized to the small intestine. The primary breast tumor was diagnosed as classic invasive lobular carcinoma. A PET-CT scan was performed to evaluate distant metastasis. Hormonal receptor status shifted from positive to negative, while HER2 expression changed from negative to low. Systemic treatment with trastuzumab deruxtecan yielded favorable outcomes."
+  },
+  {
+    "patient_id": "P003",
+    "summary": "A woman in her early 50s presented with a breast mass later determined to be metastasis from lung cancer. Biopsy suggested ER positive, PR negative, HER2 positive disease. Comprehensive breast cancer treatment was ineffective, and further markers confirmed lung origin."
+  },
+  {
+    "patient_id": "P004",
+    "summary": "A 55-year-old woman with two lesions in the left breast was diagnosed with invasive breast cancer and ductal carcinoma in situ. One lesion was Luminal B subtype and the other HER2 positive. Seven axillary lymph nodes were positive from the ER-positive lesion."
+  },
+  {
+    "patient_id": "P005",
+    "summary": "A 60-year-old woman with a history of mastectomy for left breast cancer presented with an enlarging right axilla mass. Biopsy confirmed a second primary breast cancer arising from accessory breast tissue."
+  },
+  {
+    "patient_id": "P006",
+    "summary": "A 52-year-old woman presented for routine screening and was found to have a painless breast nodule. Imaging suggested BI-RADS 4B, but biopsy revealed cholesterol granuloma, a benign lesion."
+  }
+]

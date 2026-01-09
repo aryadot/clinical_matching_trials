@@ -1,0 +1,524 @@
+{
+  "P001": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    }
+  ],
+  "P002": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    }
+  ],
+  "P003": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 2,
+      "reasons": [
+        "Confirmed malignancy"
+      ]
+    }
+  ],
+  "P004": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    }
+  ],
+  "P005": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 3,
+      "reasons": [
+        "Age information available",
+        "Confirmed malignancy"
+      ]
+    }
+  ],
+  "P006": [
+    {
+      "trial_id": "NCT04301375",
+      "title": "Omission of Surgery and Sentinel Lymph Node Dissection in Clinically Low-risk HER2positive Breast Cancer With High HER2 Addiction and a Complete Response Following Standard Anti- HER2-based Neoadjuvant Therapy (ELPIS Trial)",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT06954623",
+      "title": "Partial Breast Re-irradiation for Breast Cancer",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT06811870",
+      "title": "A Phase II Single-Arm Clinical Study to Explore the Efficacy and Safety of Hyperbaric Oxygen in the Neoadjuvant Treatment of Breast Cancer Patients",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT05693766",
+      "title": "Gene Signatures to Guide HR+MBC Therapy in a Diverse Cohort",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT05837455",
+      "title": "NeoTAILOR: ABiomarker-directed Approach to Guide Neoadjuvant Therapy for Patients With Stage II/III ER-positive, HER2-negative Breast Cancer",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT05862610",
+      "title": "The Study of Trilaciclib Combined With Chemotherapy On The Neoadjuvant Therapy of TNBC",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT06517212",
+      "title": "Tirzepatide Weight Loss for MRD+ Early Breast Cancer",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT05035745",
+      "title": "Selinexor & Talazoparib in Advanced Refractory Solid Tumors; Advanced/Metastatic Triple Negative Breast Cancer (START)",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT06606730",
+      "title": "Personalizing the Use of Pembrolizumab for Patients Who Have a Strong Response in Early Triple Negative Breast Cancer",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    },
+    {
+      "trial_id": "NCT06749210",
+      "title": "DAANCE FOR CHEMOTHERAPY-INDUCED NEUROPATHY",
+      "score": 1,
+      "reasons": [
+        "Age information available"
+      ]
+    }
+  ]
+}
