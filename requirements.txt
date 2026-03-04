@@ -1,0 +1,9 @@
+streamlit==1.45.1
+pymupdf>=1.24.0
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+groq>=0.9.0
+torch>=2.0.0
+spacy>=3.7.0
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+pandas>=2.0.0
