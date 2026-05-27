@@ -15,25 +15,106 @@ from config import (
 from pipeline.ner import extract_clinical_entities, compute_entity_overlap
 
 
+import re
+
+
+def _parse_age_years(age_str: str) -> int | None:
+    """Parse age string like '18 Years' or '65 Years' into int."""
+    if not age_str:
+        return None
+    m = re.search(r"(\d+)", age_str)
+    return int(m.group(1)) if m else None
+
+
+def _check_age_eligibility(patient_age, min_age_str: str, max_age_str: str) -> tuple[bool, str]:
+    """
+    Check if patient age falls within trial age bounds.
+    Returns (eligible, reason).
+    """
+    if patient_age == "unknown":
+        return True, ""
+    min_age = _parse_age_years(min_age_str)
+    max_age = _parse_age_years(max_age_str)
+    age = int(patient_age)
+    if min_age and age < min_age:
+        return False, f"Patient age {age} below trial minimum {min_age}"
+    if max_age and age > max_age:
+        return False, f"Patient age {age} above trial maximum {max_age}"
+    return True, f"Age {age} within trial range"
+
+
+def _check_exclusion_criteria(patient: dict, exclusion_criteria: list[str]) -> tuple[bool, str]:
+    """
+    Check patient summary against trial exclusion criteria text.
+    Returns (excluded, reason).
+    """
+    if not exclusion_criteria:
+        return False, ""
+
+    summary_lower = patient.get("raw_summary", "").lower()
+    exclusion_signals = {
+        "pregnant": ["pregnan", "gestation"],
+        "cardiac":  ["heart failure", "cardiac", "myocardial"],
+        "hepatic":  ["hepatic", "liver disease", "cirrhosis"],
+        "renal":    ["renal failure", "kidney disease"],
+        "autoimmune": ["autoimmune", "lupus", "rheumatoid"],
+    }
+
+    exc_text = " ".join(exclusion_criteria).lower()
+    for condition, keywords in exclusion_signals.items():
+        patient_has = any(k in summary_lower for k in keywords)
+        trial_excludes = any(k in exc_text for k in keywords)
+        if patient_has and trial_excludes:
+            return True, f"Exclusion criterion matched: {condition}"
+
+    return False, ""
+
+
 def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list[str]]:
     """
-    Rule-based scoring from original project, preserved and enhanced.
+    Rule-based scoring combining disease signals, receptor matching,
+    age eligibility, and exclusion criteria parsing.
     Returns (normalized_score, reasons).
     """
     score = 0
     reasons = []
-    max_possible = 9  # Sum of all positive signals
+    max_possible = 12  # Increased to account for new signals
 
     summary = patient["raw_summary"].lower()
-    conditions = (trial.get("conditions", "") or "").lower()
+    conditions   = (trial.get("conditions", "")   or "").lower()
     interventions = (trial.get("interventions", "") or "").lower()
-    trial_text = f"{conditions} {interventions}".lower()
+    eligibility  = (trial.get("eligibility", "")  or "").lower()
+    trial_text   = f"{conditions} {interventions} {eligibility}".lower()
 
-    # Pregnancy hard exclusion
-    if patient.get("pregnant") and "pregnan" in trial_text:
-        return -1.0, ["Pregnancy exclusion — hard disqualifier"]
+    # ── Hard exclusions ────────────────────────────────────────────────────────
 
-    # Core disease relevance
+    # Pregnancy exclusion
+    if patient.get("pregnant"):
+        exc_criteria = trial.get("exclusion_criteria", [])
+        exc_text = " ".join(exc_criteria).lower() if exc_criteria else ""
+        if "pregnan" in trial_text or "pregnan" in exc_text:
+            return -1.0, ["Pregnancy exclusion — hard disqualifier"]
+
+    # Exclusion criteria check
+    excluded, exc_reason = _check_exclusion_criteria(
+        patient, trial.get("exclusion_criteria", [])
+    )
+    if excluded:
+        return -1.0, [f"Hard exclusion: {exc_reason}"]
+
+    # ── Age eligibility ───────────────────────────────────────────────────────
+    age_eligible, age_reason = _check_age_eligibility(
+        patient.get("age"),
+        trial.get("min_age", ""),
+        trial.get("max_age", "")
+    )
+    if not age_eligible:
+        return -1.0, [f"Age ineligibility: {age_reason}"]
+    if age_reason:
+        score += 1
+        reasons.append(age_reason)
+
+    # ── Core disease relevance ────────────────────────────────────────────────
     if "breast cancer" in summary or "breast" in summary:
         if any(term in conditions for term in ["breast", "mammary"]):
             score += SIGNAL_DISEASE_MATCH

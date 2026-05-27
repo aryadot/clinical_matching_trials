@@ -1,0 +1,260 @@
+[
+  {
+    "patient_id": "P001",
+    "summary_excerpt": "A 33-year-old woman was admitted to hospital with a left breast mass that had appeared more than a year earlier. She was a second-time pregnant woman with a single live intrauterine fetus at 23 + 4 we",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT06960707",
+        "title": "Two Versus One Week Breast Radiotherapy (RT)",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient is pregnant and has a larger tumor size, which may not align with the trial's eligibility criteria and poses challenges for radiotherapy during pregnancy."
+      },
+      {
+        "trial_id": "NCT06559696",
+        "title": "Internal Mammary Lymph Nodes Irradiation in High-risk Breast Cancer After Neoadj",
+        "clinical_relevance": 3,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's condition involves a high-risk breast cancer diagnosis during pregnancy, which may not align with the trial's specific requirements of prior neoadjuvant chemotherapy and lack of distant metastases, and the pregnancy status may introduce additional complexities."
+      },
+      {
+        "trial_id": "NCT06184750",
+        "title": "Finding the Best Tamoxifen Dose for Breast Cancer Risk Reduction in Premenopausa",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient is pregnant and has a confirmed breast mass suspected to be cancerous, making tamoxifen and standard trial procedures not suitable."
+      },
+      {
+        "trial_id": "NCT07191717",
+        "title": "Imlunestrant and Abemaciclib for the Treatment of Estrogen Receptor Positive Bre",
+        "clinical_relevance": 4,
+        "eligibility_alignment": 3,
+        "reasoning": "The patient's condition appears to align with the trial's focus on estrogen receptor-positive breast cancer, but her pregnancy status and current disease stage need further evaluation for full eligibility."
+      },
+      {
+        "trial_id": "NCT05253170",
+        "title": "Hypo Versus Conventional Fractionation in Reconstructed-Breast Cancer Mastectomy",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient is pregnant and has not undergone mastectomy or reconstruction, making the trial less relevant and likely ineligible."
+      }
+    ],
+    "avg_clinical_relevance": 2.6,
+    "avg_eligibility_alignment": 2.2
+  },
+  {
+    "patient_id": "P002",
+    "summary_excerpt": "This case report presents a patient with breast cancer that metastasized to the small intestine. The primary breast tumor was diagnosed as classic invasive lobular carcinoma. A PET-CT scan was perform",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT01785420",
+        "title": "Pre Operative Trastuzumab in Operable Breast Cancer",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's metastatic breast cancer with changing receptor status and previous treatment with trastuzumab deruxtecan does not align with the trial's focus on operable, HER2-positive breast cancer with no metastasis."
+      },
+      {
+        "trial_id": "NCT06271837",
+        "title": "A Study of T-DXd as Monotherapy or in Combination With Anti-cancer Agents in Pat",
+        "clinical_relevance": 4,
+        "eligibility_alignment": 4,
+        "reasoning": "The patient's HER2-expressing tumor and previous response to trastuzumab deruxtecan make the trial highly relevant, but the exclusion of breast cancer patients and uncertain eligibility due to tumor origin and previous treatments require careful consideration."
+      },
+      {
+        "trial_id": "NCT06750484",
+        "title": "Trial of Trastuzumab Deruxtecan in Previously Treated HER2",
+        "clinical_relevance": 4,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's condition involves metastatic breast cancer and has shown a response to trastuzumab deruxtecan, but their HER2 status history may not align with the trial's strict eligibility criteria."
+      },
+      {
+        "trial_id": "NCT07198724",
+        "title": "ERADICATE: A Phase Ib/II Study of Elacestrant Plus Trastuzumab Deruxtecan in Pat",
+        "clinical_relevance": 4,
+        "eligibility_alignment": 4,
+        "reasoning": "The patient's HER2-low status and history of endocrine-resistant HR+ metastatic breast cancer align with the trial's focus, although initial receptor status changes and treatment history require verification."
+      },
+      {
+        "trial_id": "NCT06539559",
+        "title": "Efficacy and Resistant Mechanism of Eribulin and Bevacizumab for Advanced HER2 N",
+        "clinical_relevance": 3,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's HER2 status changed from negative to low, which may not align with the trial's HER2 negative requirement, and previous treatment with trastuzumab deruxtecan may impact eligibility."
+      }
+    ],
+    "avg_clinical_relevance": 3.4,
+    "avg_eligibility_alignment": 2.8
+  },
+  {
+    "patient_id": "P003",
+    "summary_excerpt": "A woman in her early 50s presented with a breast mass later determined to be metastasis from lung cancer. Biopsy suggested ER positive, PR negative, HER2 positive disease. Comprehensive breast cancer ",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT07177950",
+        "title": "A Two-cohort Study of SHR-A1811 in the Treatment of HER2-positive Breast Cancer ",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's breast cancer is HER2 positive but originated from lung cancer, not primary breast cancer, making the trial marginally relevant and likely ineligible due to the primary cancer origin."
+      },
+      {
+        "trial_id": "NCT07299825",
+        "title": "A Study of A166 in Patients With HER2-Positive Unresectable or Metastatic Breast",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's breast cancer is HER2 positive but originated from lung cancer, not primary breast cancer, making the trial marginally relevant and likely ineligible due to the specific requirement for breast cancer patients by histopathology and/or cytology documented."
+      },
+      {
+        "trial_id": "NCT06539559",
+        "title": "Efficacy and Resistant Mechanism of Eribulin and Bevacizumab for Advanced HER2 N",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient's HER2 positive status and lung cancer origin make the trial irrelevant and the patient ineligible."
+      },
+      {
+        "trial_id": "NCT04588545",
+        "title": "Radiation Therapy Followed by Intrathecal Trastuzumab/Pertuzumab in HER2+ Breast",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's breast cancer is HER2 positive but originated from lung cancer, not breast cancer, making the trial less relevant and likely ineligible."
+      },
+      {
+        "trial_id": "NCT07100600",
+        "title": "Trastuzumab Rezetecan Combined With Radiotherapy Versus Trastuzumab Rezetecan in",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's HER2-positive status matches the trial, but the lung cancer origin and previous treatment with comprehensive breast cancer treatment, including likely trastuzumab, may affect eligibility and relevance."
+      }
+    ],
+    "avg_clinical_relevance": 1.8,
+    "avg_eligibility_alignment": 1.8
+  },
+  {
+    "patient_id": "P004",
+    "summary_excerpt": "A 55-year-old woman with two lesions in the left breast was diagnosed with invasive breast cancer and ductal carcinoma in situ. One lesion was Luminal B subtype and the other HER2 positive. Seven axil",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT06704945",
+        "title": "No Axillary Surgical Treatment in Clinically Lymph Node Negative Patients on Ult",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "Patient has clinically positive lymph nodes and mixed receptor status, not aligning with trial's focus on node-negative, specific subtype, or post-NAC ultrasound criteria."
+      },
+      {
+        "trial_id": "NCT06539559",
+        "title": "Efficacy and Resistant Mechanism of Eribulin and Bevacizumab for Advanced HER2 N",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient has a HER2-positive lesion, making her ineligible for a trial specifically for HER2-negative breast cancer."
+      },
+      {
+        "trial_id": "NCT06444269",
+        "title": "Precision Medicine in Action: Phase II Trial of Response Adaptive Ablative Pre-o",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient's HER2-positive and Luminal B subtypes with lymph node involvement exceed the trial's T2cN0 and ER+ criteria."
+      },
+      {
+        "trial_id": "NCT07191717",
+        "title": "Imlunestrant and Abemaciclib for the Treatment of Estrogen Receptor Positive Bre",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's HER2-positive lesion and mixed receptor status make the trial less relevant and the patient likely ineligible due to the trial's requirement for ER+ and HER2-negative breast cancer."
+      },
+      {
+        "trial_id": "NCT06585969",
+        "title": "A Randomised Trial Comparing Trastuzumab Deruxtecan to CDK4/6 Inhibitors in Non-",
+        "clinical_relevance": 3,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's HER2-positive lesion and mixed cancer profile may not align with the trial's HER2-low and specific subtype requirements."
+      }
+    ],
+    "avg_clinical_relevance": 2.2,
+    "avg_eligibility_alignment": 1.8
+  },
+  {
+    "patient_id": "P005",
+    "summary_excerpt": "A 60-year-old woman with a history of mastectomy for left breast cancer presented with an enlarging right axilla mass. Biopsy confirmed a second primary breast cancer arising from accessory breast tis",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT06092892",
+        "title": "IIT2023-09-Chung-UpfrontTAD: Upfront TAD/SNB in Patients With Breast Cancer With",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient's condition involves a second primary breast cancer with nodal metastases, but the trial seems to focus on patients with less advanced disease (T1-2N0) and without a history of previous breast cancer or mastectomy."
+      },
+      {
+        "trial_id": "NCT06144164",
+        "title": "A Study of a Comprehensive Prevention Program to Reduce Lymphedema After Axillar",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient has a history of mastectomy and ALND, which may not align with the trial's focus on preventing lymphedema after axillary lymph node dissection for a new breast cancer diagnosis, and her current presentation is for a second primary breast cancer."
+      },
+      {
+        "trial_id": "NCT05993559",
+        "title": "Necessity of Post-mastectomy Radiotherapy After Neoadjuvant Chemotherapy and Mas",
+        "clinical_relevance": 4,
+        "eligibility_alignment": 4,
+        "reasoning": "The patient's condition involves a mastectomy and a second primary breast cancer, aligning with the trial's focus on post-mastectomy radiotherapy after neoadjuvant chemotherapy and mastectomy."
+      },
+      {
+        "trial_id": "NCT03417622",
+        "title": "Wide Margin vs. Narrow Margin in Postneoadjuvant Lumpectomy",
+        "clinical_relevance": 2,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient has a history of mastectomy and presents with a second primary breast cancer in the accessory breast tissue, which may not align with the trial's focus on lumpectomy and neoadjuvant therapy for a single primary breast cancer, and likely doesn't meet eligibility due to multifocal or secondary cancer aspects."
+      },
+      {
+        "trial_id": "NCT06153836",
+        "title": "Neurotization of the Nipple Areolar Complex to Restore Sensation for Patients Wi",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient's condition involves a second primary breast cancer arising from accessory breast tissue with a history of mastectomy, not matching the trial's focus on nipple-sparing mastectomy for early-stage breast cancer."
+      }
+    ],
+    "avg_clinical_relevance": 2.2,
+    "avg_eligibility_alignment": 2.2
+  },
+  {
+    "patient_id": "P006",
+    "summary_excerpt": "A 52-year-old woman presented for routine screening and was found to have a painless breast nodule. Imaging suggested BI-RADS 4B, but biopsy revealed cholesterol granuloma, a benign lesion.",
+    "top_trials_evaluated": [
+      {
+        "trial_id": "NCT03936478",
+        "title": "Real-Time MRI-Guided 3-Fraction Accelerated Partial Breast Irradiation in Early ",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient has a benign lesion (cholesterol granuloma) and does not have breast cancer, making the trial not clinically relevant and the patient clearly ineligible."
+      },
+      {
+        "trial_id": "NCT07225114",
+        "title": "Translation of Acoustic Angiography: Contrast Enhanced Super Resolution (CESR) I",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 2,
+        "reasoning": "The patient has a benign lesion (cholesterol granuloma) and does not have breast cancer, making the trial not clinically relevant and likely ineligible due to not meeting the scheduled biopsy for a neoplasm criterion."
+      },
+      {
+        "trial_id": "NCT04722692",
+        "title": "Delayed Sentinel Lymph Node Biopsy in Ductal Cancer in Situ",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient's diagnosis is a benign lesion (cholesterol granuloma), not a breast cancer or DCIS, making the trial not relevant and the patient ineligible."
+      },
+      {
+        "trial_id": "NCT04567420",
+        "title": "DNA-guided Second Line Adjuvant Therapy for High Residual Risk, Estrogen Recepto",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient has a benign lesion (cholesterol granuloma) and not breast cancer, making the trial not clinically relevant and the patient clearly ineligible."
+      },
+      {
+        "trial_id": "NCT06736613",
+        "title": "A Study of Circulating Tumor DNA (ctDNA) Testing for People With B-Cell Lymphoma",
+        "clinical_relevance": 1,
+        "eligibility_alignment": 1,
+        "reasoning": "The patient has a benign breast lesion (cholesterol granuloma) and does not have any diagnosis of B-cell lymphoma, making the trial not clinically relevant and the patient clearly ineligible."
+      }
+    ],
+    "avg_clinical_relevance": 1.0,
+    "avg_eligibility_alignment": 1.2
+  }
+]
