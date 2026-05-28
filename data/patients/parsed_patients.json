@@ -5,11 +5,12 @@
     "pregnant": true,
     "receptor_status": {
       "ER": "unknown",
+      "PR": "unknown",
       "HER2": "unknown"
     },
     "metastatic": false,
-    "prior_cancer_history": false,
-    "prior_systemic_therapy": false,
+    "stage": "unknown",
+    "prior_therapy": [],
     "comorbidities": [],
     "raw_summary": "A 33-year-old woman was admitted to hospital with a left breast mass that had appeared more than a year earlier. She was a second-time pregnant woman with a single live intrauterine fetus at 23 + 4 weeks of gestation. During the examination of the left breast, a 6 by 8 cm sized mass can be observed on the upper outer quadrant."
   },
@@ -19,11 +20,14 @@
     "pregnant": false,
     "receptor_status": {
       "ER": "unknown",
+      "PR": "unknown",
       "HER2": "unknown"
     },
     "metastatic": false,
-    "prior_cancer_history": false,
-    "prior_systemic_therapy": true,
+    "stage": "unknown",
+    "prior_therapy": [
+      "trastuzumab"
+    ],
     "comorbidities": [],
     "raw_summary": "This case report presents a patient with breast cancer that metastasized to the small intestine. The primary breast tumor was diagnosed as classic invasive lobular carcinoma. A PET-CT scan was performed to evaluate distant metastasis. Hormonal receptor status shifted from positive to negative, while HER2 expression changed from negative to low. Systemic treatment with trastuzumab deruxtecan yielded favorable outcomes."
   },
@@ -33,11 +37,12 @@
     "pregnant": false,
     "receptor_status": {
       "ER": "positive",
+      "PR": "negative",
       "HER2": "positive"
     },
     "metastatic": false,
-    "prior_cancer_history": false,
-    "prior_systemic_therapy": false,
+    "stage": "unknown",
+    "prior_therapy": [],
     "comorbidities": [],
     "raw_summary": "A woman in her early 50s presented with a breast mass later determined to be metastasis from lung cancer. Biopsy suggested ER positive, PR negative, HER2 positive disease. Comprehensive breast cancer treatment was ineffective, and further markers confirmed lung origin."
   },
@@ -47,11 +52,12 @@
     "pregnant": false,
     "receptor_status": {
       "ER": "positive",
+      "PR": "unknown",
       "HER2": "positive"
     },
     "metastatic": false,
-    "prior_cancer_history": false,
-    "prior_systemic_therapy": false,
+    "stage": "unknown",
+    "prior_therapy": [],
     "comorbidities": [],
     "raw_summary": "A 55-year-old woman with two lesions in the left breast was diagnosed with invasive breast cancer and ductal carcinoma in situ. One lesion was Luminal B subtype and the other HER2 positive. Seven axillary lymph nodes were positive from the ER-positive lesion."
   },
@@ -61,11 +67,14 @@
     "pregnant": false,
     "receptor_status": {
       "ER": "unknown",
+      "PR": "unknown",
       "HER2": "unknown"
     },
     "metastatic": false,
-    "prior_cancer_history": true,
-    "prior_systemic_therapy": false,
+    "stage": "unknown",
+    "prior_therapy": [
+      "mastectomy"
+    ],
     "comorbidities": [],
     "raw_summary": "A 60-year-old woman with a history of mastectomy for left breast cancer presented with an enlarging right axilla mass. Biopsy confirmed a second primary breast cancer arising from accessory breast tissue."
   },
@@ -75,12 +84,236 @@
     "pregnant": false,
     "receptor_status": {
       "ER": "unknown",
+      "PR": "unknown",
       "HER2": "unknown"
     },
     "metastatic": false,
-    "prior_cancer_history": false,
-    "prior_systemic_therapy": false,
+    "stage": "unknown",
+    "prior_therapy": [],
     "comorbidities": [],
     "raw_summary": "A 52-year-old woman presented for routine screening and was found to have a painless breast nodule. Imaging suggested BI-RADS 4B, but biopsy revealed cholesterol granuloma, a benign lesion."
+  },
+  {
+    "patient_id": "P007",
+    "age": 72,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "positive",
+      "PR": "unknown",
+      "HER2": "unknown"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [],
+    "comorbidities": [],
+    "raw_summary": "A 72-year-old woman presented with bilateral breast cancer with heterogeneous hormone receptor status. One tumor was ER-positive and the other ER-negative, with discordant HER2 expression between the two lesions. The complex receptor heterogeneity posed significant challenges for treatment planning and systemic therapy selection."
+  },
+  {
+    "patient_id": "P008",
+    "age": "unknown",
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "unknown",
+      "PR": "unknown",
+      "HER2": "positive"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [],
+    "comorbidities": [],
+    "raw_summary": "A patient with HER2-positive breast cancer developed recurrent disease with brain metastases. The patient had advanced stage disease and received radiotherapy combined with T-DM1 biosimilar treatment, achieving long-term survival despite the poor prognosis typically associated with breast cancer brain metastases."
+  },
+  {
+    "patient_id": "P009",
+    "age": "unknown",
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "unknown",
+      "PR": "unknown",
+      "HER2": "unknown"
+    },
+    "metastatic": true,
+    "stage": "STAGE IV",
+    "prior_therapy": [],
+    "comorbidities": [],
+    "raw_summary": "A patient with metastatic breast cancer developed leptomeningeal metastasis. Estrogen receptor-positive status of the leptomeningeal lesion was confirmed via FES PET/CT imaging, which demonstrated ER expression in cerebrospinal fluid metastases where conventional immunocytochemistry was limited by invasive sampling constraints."
+  },
+  {
+    "patient_id": "P010",
+    "age": 58,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "negative",
+      "PR": "negative",
+      "HER2": "negative"
+    },
+    "metastatic": true,
+    "stage": "STAGE IV",
+    "prior_therapy": [
+      "endocrine therapy"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 58-year-old woman initially diagnosed with ER-positive, PR-negative, HER2-negative invasive ductal carcinoma experienced receptor evolution over six years. Her tumor transitioned to triple-negative breast cancer at recurrence, then reacquired ER expression at 80% in metastatic mediastinal lymph nodes. HER2 status evolved from IHC 0 to HER2-low, requiring sequential treatment modifications including endocrine therapy, immunotherapy, CDK4/6 inhibitors, and antibody-drug conjugates."
+  },
+  {
+    "patient_id": "P011",
+    "age": "unknown",
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "unknown",
+      "PR": "unknown",
+      "HER2": "unknown"
+    },
+    "metastatic": true,
+    "stage": "STAGE IV",
+    "prior_therapy": [
+      "trastuzumab"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A patient with invasive lobular carcinoma developed small intestinal metastasis causing bowel obstruction. Receptor status shifted from hormone receptor-positive to negative, while HER2 expression changed from negative to low between the primary tumor and metastatic lesions. Systemic treatment with trastuzumab deruxtecan yielded favorable outcomes following palliative surgical resection."
+  },
+  {
+    "patient_id": "P012",
+    "age": 37,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "positive",
+      "PR": "unknown",
+      "HER2": "positive"
+    },
+    "metastatic": false,
+    "stage": "STAGE III",
+    "prior_therapy": [
+      "chemotherapy",
+      "endocrine therapy",
+      "trastuzumab",
+      "pertuzumab"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 37-year-old woman diagnosed with stage IIIA ER-positive, HER2-positive breast cancer received neoadjuvant chemotherapy with epirubicin, cyclophosphamide, docetaxel, trastuzumab, and pertuzumab. Following liver metastasis detection, sequential treatment with T-DM1 and trastuzumab deruxtecan was administered. Rebiopsy revealed HER2-negative conversion, after which CDK4/6 inhibitor combination endocrine therapy achieved tumor shrinkage maintained over 16 months."
+  },
+  {
+    "patient_id": "P013",
+    "age": 40,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "negative",
+      "PR": "negative",
+      "HER2": "negative"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [
+      "chemotherapy",
+      "endocrine therapy",
+      "mastectomy"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 40-year-old woman with germline BRCA mutation was diagnosed with hormone receptor-positive, HER2-negative invasive ductal carcinoma. Following modified radical mastectomy, adjuvant radiotherapy, chemotherapy, and endocrine therapy, she developed HER2-positive lung progression after four years. Subsequent triple-negative progression led to carboplatin therapy, followed by olaparib monotherapy based on OlympiAD trial results, achieving stable disease."
+  },
+  {
+    "patient_id": "P014",
+    "age": 45,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "negative",
+      "PR": "negative",
+      "HER2": "negative"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [],
+    "comorbidities": [],
+    "raw_summary": "A 45-year-old woman presented with synchronous bilateral breast cancer with discordant receptor status \u2014 a triple-negative tumor in one breast and a contralateral HER2-positive tumor. The heterogeneous molecular profiles of the two simultaneous primary tumors required separate treatment considerations and complicated systemic therapy planning."
+  },
+  {
+    "patient_id": "P015",
+    "age": 28,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "negative",
+      "PR": "positive",
+      "HER2": "positive"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [
+      "chemotherapy",
+      "surgery",
+      "mastectomy"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 28-year-old woman diagnosed with invasive ductal carcinoma, luminal B subtype, HER2-positive at cT3N1M0 stage received neoadjuvant chemotherapy followed by breast conserving surgery. Fourteen months post-surgery, biopsy confirmed recurrence with luminal B subtype, HER2-negative, ER-negative, PR-positive at 10% and Ki-67 at 70%. Despite modified chemotherapy regimens, local progression led to radical mastectomy, and subsequent lung and retrosternal node metastases required stereotactic radiotherapy."
+  },
+  {
+    "patient_id": "P016",
+    "age": 87,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "unknown",
+      "PR": "unknown",
+      "HER2": "positive"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [
+      "trastuzumab"
+    ],
+    "comorbidities": [],
+    "raw_summary": "An 87-year-old woman with HER2-positive breast cancer presented with lymph node and skin metastases following progression after three lines of chemoimmunotherapy. The elderly patient had received multiple prior treatment regimens and was treated with trastuzumab emtansine, demonstrating significant clinical response despite advanced age and concerns about treatment tolerability in octogenarian patients."
+  },
+  {
+    "patient_id": "P017",
+    "age": 72,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "positive",
+      "PR": "unknown",
+      "HER2": "unknown"
+    },
+    "metastatic": true,
+    "stage": "STAGE IV",
+    "prior_therapy": [
+      "chemotherapy",
+      "surgery",
+      "mastectomy"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 72-year-old woman with metastatic breast cancer presented with metastasis to the ampulla of Vater and multiple bone metastases, 27 years after bilateral mastectomy and chemotherapy for primary breast cancer. Immunohistochemical staining confirmed ER-positive, progesterone receptor-negative, GATA3-positive carcinoma of breast origin. Management required multidisciplinary coordination across gastroenterology, surgery, oncology, and palliative care teams."
+  },
+  {
+    "patient_id": "P018",
+    "age": 33,
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "unknown",
+      "PR": "unknown",
+      "HER2": "positive"
+    },
+    "metastatic": false,
+    "stage": "unknown",
+    "prior_therapy": [
+      "trastuzumab",
+      "surgery"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A 33-year-old woman with HR-positive, HER2-positive breast cancer developed recurrence with liver, bone, and lymph node metastases two years after breast conserving surgery without adjuvant therapy. First-line pyrotinib plus trastuzumab and nab-paclitaxel achieved partial response. Brain metastases subsequently developed, responding to second-line pyrotinib, inetetamab, and vinorelbine. Treatment transitioned to trastuzumab deruxtecan following brain lesion progression, guided by next generation sequencing and minimal residual disease monitoring."
+  },
+  {
+    "patient_id": "P019",
+    "age": "unknown",
+    "pregnant": false,
+    "receptor_status": {
+      "ER": "negative",
+      "PR": "negative",
+      "HER2": "negative"
+    },
+    "metastatic": false,
+    "stage": "STAGE III",
+    "prior_therapy": [
+      "chemotherapy"
+    ],
+    "comorbidities": [],
+    "raw_summary": "A patient with germline PALB2 pathogenic variant was diagnosed with locally advanced PD-L1 positive triple-negative breast cancer. Following progression on an immune checkpoint inhibitor-containing regimen, the patient achieved pathologic complete response after platinum-based chemotherapy, suggesting the germline PALB2 alteration as a dominant cancer driver over PD-L1 expression in guiding treatment response."
   }
 ]

@@ -1,14 +1,17 @@
 """
 evaluate_retrieval.py — Retrieval Quality Evaluation for Clinical Trial Navigator
 
-Metrics computed:
-  - Precision@k  : fraction of top-k retrieved trials that are relevant
-  - Recall@k     : fraction of all relevant trials captured in top-k
-  - MRR          : Mean Reciprocal Rank (how high the first relevant result ranks)
-  - NDCG@k       : Normalized Discounted Cumulative Gain (quality of ranking)
+Architecture being evaluated:
+  Stage 1: ChromaDB semantic search retrieves top 50 candidates
+  Stage 2: Rule-based hard filters (age, exclusion criteria, pregnancy)
+  Stage 3: Cross-encoder BERT scores patient-trial pairs semantically
+  Stage 4: Composite ranking (semantic 0.35 + cross-encoder 0.65)
 
-Ground truth is built using rule-based + NER scoring only (no semantic component)
-to avoid bias from a fixed semantic similarity value.
+Metrics:
+  MRR        — Mean Reciprocal Rank
+  Precision@k — Fraction of top-k retrieved that are relevant
+  Recall@k   — Fraction of all relevant trials captured in top-k
+  NDCG@k     — Normalized Discounted Cumulative Gain
 """
 
 import json
@@ -19,13 +22,13 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from pipeline.embeddings import get_chroma_client, get_collection, index_trials, semantic_search
-from pipeline.ner import extract_clinical_entities, compute_entity_overlap
+from pipeline.ner import extract_clinical_entities
 from pipeline.scorer import score_patient_trial, rank_trials, compute_rule_score
 from pipeline.parser import parse_patient
 
-K_VALUES = [1, 3, 5, 10]
-RELEVANCE_THRESHOLD = 0.50
-TOP_RETRIEVAL = 50
+K_VALUES           = [1, 3, 5, 10]
+RELEVANCE_THRESHOLD = 0.55
+TOP_RETRIEVAL      = 50
 
 
 def load_data():
@@ -44,22 +47,19 @@ def load_data():
 
 
 def build_ground_truth(patients, trials):
-    print("Building ground truth via rule + NER scoring...")
+    """
+    Build ground truth using rule scoring only — no semantic component
+    to avoid bias from a fixed similarity value.
+    """
+    print("\nBuilding ground truth via rule scoring...")
     ground_truth = {}
     for raw_p in patients:
         patient = parse_patient(raw_p)
-        patient_entities = extract_clinical_entities(patient.get("raw_summary", ""))
         relevant = set()
         for trial in trials:
-            trial_text = f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
-            trial_entities = extract_clinical_entities(trial_text)
+            tid = trial.get("trial_id", "")
             rule_score, _ = compute_rule_score(patient, trial)
-            if rule_score < 0:
-                continue
-            ner_score = compute_entity_overlap(patient_entities, trial_entities)
-            combined = (rule_score * 0.6) + (ner_score * 0.4)
-            if combined >= RELEVANCE_THRESHOLD:
-                tid = trial.get("trial_id") or trial.get("nct_id") or trial.get("NCTId", "")
+            if rule_score >= RELEVANCE_THRESHOLD:
                 relevant.add(tid)
         ground_truth[raw_p["patient_id"]] = relevant
         print(f"  {raw_p['patient_id']}: {len(relevant)} relevant trials")
@@ -67,38 +67,33 @@ def build_ground_truth(patients, trials):
 
 
 def retrieve_for_patient(patient, trials_lookup, collection, top_k=TOP_RETRIEVAL):
-    parsed = parse_patient(patient)
-    query_text = parsed.get("raw_summary", patient.get("summary", ""))
+    parsed      = parse_patient(patient)
+    query_text  = parsed.get("raw_summary", patient.get("summary", ""))
     patient_entities = extract_clinical_entities(query_text)
-    candidates = semantic_search(query_text, collection, top_k=top_k)
+    candidates  = semantic_search(query_text, collection, top_k=top_k)
     scored = []
     for c in candidates:
         trial = trials_lookup.get(c["trial_id"])
         if not trial:
             continue
-        trial_text = f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
-        trial_entities = extract_clinical_entities(trial_text)
+        trial_entities = extract_clinical_entities(
+            f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
+        )
         result = score_patient_trial(
             patient=parsed, trial=trial,
             semantic_similarity=c["similarity"],
-            patient_entities=patient_entities, trial_entities=trial_entities,
+            patient_entities=patient_entities,
+            trial_entities=trial_entities,
         )
         scored.append(result)
-    ranked = rank_trials(scored, top_k=top_k)
-    return [r["trial_id"] for r in ranked]
+    return [r["trial_id"] for r in rank_trials(scored, top_k=top_k)]
 
 
 def precision_at_k(retrieved, relevant, k):
-    if not retrieved or not relevant:
-        return 0.0
-    return sum(1 for t in retrieved[:k] if t in relevant) / k
-
+    return sum(1 for t in retrieved[:k] if t in relevant) / k if retrieved and relevant else 0.0
 
 def recall_at_k(retrieved, relevant, k):
-    if not relevant:
-        return 0.0
-    return sum(1 for t in retrieved[:k] if t in relevant) / len(relevant)
-
+    return sum(1 for t in retrieved[:k] if t in relevant) / len(relevant) if relevant else 0.0
 
 def reciprocal_rank(retrieved, relevant):
     for i, t in enumerate(retrieved):
@@ -106,10 +101,9 @@ def reciprocal_rank(retrieved, relevant):
             return 1.0 / (i + 1)
     return 0.0
 
-
 def ndcg_at_k(retrieved, relevant, k):
     top_k = retrieved[:k]
-    dcg = sum(1.0 / math.log2(i + 2) for i, t in enumerate(top_k) if t in relevant)
+    dcg  = sum(1.0 / math.log2(i + 2) for i, t in enumerate(top_k) if t in relevant)
     idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(relevant), k)))
     return dcg / idcg if idcg > 0 else 0.0
 
@@ -134,18 +128,18 @@ def evaluate():
     index_trials(trials, trial_texts)
     collection = get_collection(client)
 
-    results = {k: {"precision": [], "recall": [], "ndcg": []} for k in K_VALUES}
+    results   = {k: {"precision": [], "recall": [], "ndcg": []} for k in K_VALUES}
     mrr_scores = []
 
     print("\nRunning retrieval evaluation...")
     for raw_p in raw_patients:
-        pid = raw_p["patient_id"]
+        pid      = raw_p["patient_id"]
         relevant = ground_truth.get(pid, set())
         if not relevant:
             print(f"  {pid}: no relevant trials, skipping")
             continue
         retrieved = retrieve_for_patient(raw_p, trials_lookup, collection)
-        rr = reciprocal_rank(retrieved, relevant)
+        rr        = reciprocal_rank(retrieved, relevant)
         mrr_scores.append(rr)
         for k in K_VALUES:
             results[k]["precision"].append(precision_at_k(retrieved, relevant, k))

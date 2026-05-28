@@ -1,25 +1,114 @@
 """
 pipeline/scorer.py — Trial Scoring & Ranking
-Combines three scoring signals:
-  1. Semantic similarity (embedding cosine distance)
-  2. Rule-based clinical signals (from original project)
-  3. NER entity overlap (biomarkers, cancer types, stages)
+==============================================
+Architecture: spaCy entity extraction + BERT cross-encoder scoring
+
+Two-stage pipeline:
+  Stage 1 — spaCy pattern matching extracts clinical entities fast and reliably.
+             Used for hard exclusion checks and display purposes.
+
+  Stage 2 — BERT cross-encoder reads the full patient summary and trial
+             eligibility text as a pair and outputs a semantic relevance score.
+             Replaces string-level NER overlap which required entity normalization.
+             Cross-encoder never compares entity strings — it understands semantic
+             relationships between patient clinical picture and trial requirements.
+
+Composite score:
+  - Semantic similarity (ChromaDB embeddings): 0.35 weight
+  - Cross-encoder relevance score:             0.65 weight
+  - Rule-based checks: hard filters only (exclusions, age)
+
+Cross-encoder model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  Small (66MB), fast on CPU, strong semantic matching.
 """
 
+import re
+import os
+
+try:
+    import streamlit as st
+    _IN_STREAMLIT = True
+except ImportError:
+    _IN_STREAMLIT = False
+
 from config import (
-    SEMANTIC_WEIGHT, RULE_WEIGHT, NER_WEIGHT,
     SIGNAL_DISEASE_MATCH, SIGNAL_MALIGNANCY, SIGNAL_RECEPTOR_MATCH,
     SIGNAL_METASTATIC_MATCH, SIGNAL_AGE_AVAILABLE, SIGNAL_ER_MATCH,
-    PENALTY_PREGNANCY,
 )
-from pipeline.ner import extract_clinical_entities, compute_entity_overlap
+
+# ── Weights ───────────────────────────────────────────────────────────────────
+SEMANTIC_WEIGHT      = 0.35
+CROSS_ENCODER_WEIGHT = 0.65
+
+CROSS_ENCODER_MODEL  = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+_cross_encoder_cache = None
 
 
-import re
+# ── Cross-encoder loading ─────────────────────────────────────────────────────
+def _build_cross_encoder():
+    from sentence_transformers import CrossEncoder
+    return CrossEncoder(CROSS_ENCODER_MODEL)
 
 
+if _IN_STREAMLIT:
+    @st.cache_resource(show_spinner="Loading BERT cross-encoder...")
+    def load_cross_encoder():
+        return _build_cross_encoder()
+else:
+    def load_cross_encoder():
+        global _cross_encoder_cache
+        if _cross_encoder_cache is None:
+            _cross_encoder_cache = _build_cross_encoder()
+        return _cross_encoder_cache
+
+
+# ── Cross-encoder scoring ─────────────────────────────────────────────────────
+def compute_cross_encoder_score(patient_summary: str, trial: dict) -> float:
+    """
+    Use BERT cross-encoder to score semantic relevance between patient summary
+    and trial eligibility criteria.
+
+    The cross-encoder reads the patient-trial pair together and outputs a
+    relevance score — no string matching, no entity normalization needed.
+    It understands that 'ER-positive' and 'estrogen receptor positive' are
+    the same concept in context.
+
+    Returns normalized score 0.0 to 1.0.
+    """
+    try:
+        # Build focused trial text — title + conditions + inclusion criteria
+        trial_text = f"{trial.get('title', '')}. {trial.get('conditions', '')}."
+        eligibility = trial.get("eligibility", "") or ""
+
+        # Extract inclusion criteria section for focused matching
+        inc_idx = eligibility.lower().find("inclusion criteria")
+        exc_idx = eligibility.lower().find("exclusion criteria")
+        if inc_idx != -1 and exc_idx != -1:
+            inc_text = eligibility[inc_idx:exc_idx][:500]
+        elif inc_idx != -1:
+            inc_text = eligibility[inc_idx:][:500]
+        else:
+            inc_text = eligibility[:500]
+
+        trial_text = f"{trial_text} {inc_text}".strip()
+
+        if not trial_text or not patient_summary:
+            return 0.0
+
+        ce = load_cross_encoder()
+        score = ce.predict([(patient_summary[:512], trial_text[:512])])
+
+        # ms-marco returns logits — normalize to 0-1 with sigmoid
+        import math
+        normalized = 1 / (1 + math.exp(-float(score[0])))
+        return round(normalized, 4)
+
+    except Exception:
+        return 0.0
+
+
+# ── Rule-based hard filters ───────────────────────────────────────────────────
 def _parse_age_years(age_str: str) -> int | None:
-    """Parse age string like '18 Years' or '65 Years' into int."""
     if not age_str:
         return None
     m = re.search(r"(\d+)", age_str)
@@ -27,10 +116,6 @@ def _parse_age_years(age_str: str) -> int | None:
 
 
 def _check_age_eligibility(patient_age, min_age_str: str, max_age_str: str) -> tuple[bool, str]:
-    """
-    Check if patient age falls within trial age bounds.
-    Returns (eligible, reason).
-    """
     if patient_age == "unknown":
         return True, ""
     min_age = _parse_age_years(min_age_str)
@@ -43,70 +128,51 @@ def _check_age_eligibility(patient_age, min_age_str: str, max_age_str: str) -> t
     return True, f"Age {age} within trial range"
 
 
-def _check_exclusion_criteria(patient: dict, exclusion_criteria: list[str]) -> tuple[bool, str]:
-    """
-    Check patient summary against trial exclusion criteria text.
-    Returns (excluded, reason).
-    """
+def _check_exclusion_criteria(patient: dict, exclusion_criteria: list) -> tuple[bool, str]:
     if not exclusion_criteria:
         return False, ""
-
     summary_lower = patient.get("raw_summary", "").lower()
     exclusion_signals = {
-        "pregnant": ["pregnan", "gestation"],
-        "cardiac":  ["heart failure", "cardiac", "myocardial"],
-        "hepatic":  ["hepatic", "liver disease", "cirrhosis"],
-        "renal":    ["renal failure", "kidney disease"],
-        "autoimmune": ["autoimmune", "lupus", "rheumatoid"],
+        "pregnant":    ["pregnan", "gestation"],
+        "cardiac":     ["heart failure", "cardiac", "myocardial"],
+        "hepatic":     ["hepatic", "liver disease", "cirrhosis"],
+        "renal":       ["renal failure", "kidney disease"],
+        "autoimmune":  ["autoimmune", "lupus", "rheumatoid"],
     }
-
     exc_text = " ".join(exclusion_criteria).lower()
     for condition, keywords in exclusion_signals.items():
-        patient_has = any(k in summary_lower for k in keywords)
-        trial_excludes = any(k in exc_text for k in keywords)
-        if patient_has and trial_excludes:
+        if any(k in summary_lower for k in keywords) and any(k in exc_text for k in keywords):
             return True, f"Exclusion criterion matched: {condition}"
-
     return False, ""
 
 
-def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list[str]]:
+def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list]:
     """
-    Rule-based scoring combining disease signals, receptor matching,
-    age eligibility, and exclusion criteria parsing.
-    Returns (normalized_score, reasons).
+    Rule-based hard filter. Returns -1.0 on hard exclusion, 0-1 otherwise.
+    Used only for disqualification — not as a score component.
     """
     score = 0
     reasons = []
-    max_possible = 12  # Increased to account for new signals
+    max_possible = 9
 
-    summary = patient["raw_summary"].lower()
-    conditions   = (trial.get("conditions", "")   or "").lower()
+    summary = patient.get("raw_summary", "").lower()
+    conditions    = (trial.get("conditions", "")    or "").lower()
     interventions = (trial.get("interventions", "") or "").lower()
-    eligibility  = (trial.get("eligibility", "")  or "").lower()
-    trial_text   = f"{conditions} {interventions} {eligibility}".lower()
+    eligibility   = (trial.get("eligibility", "")   or "").lower()
+    trial_text    = f"{conditions} {interventions} {eligibility}"
 
-    # ── Hard exclusions ────────────────────────────────────────────────────────
-
-    # Pregnancy exclusion
+    # Hard exclusions
     if patient.get("pregnant"):
-        exc_criteria = trial.get("exclusion_criteria", [])
-        exc_text = " ".join(exc_criteria).lower() if exc_criteria else ""
+        exc_text = " ".join(trial.get("exclusion_criteria", [])).lower()
         if "pregnan" in trial_text or "pregnan" in exc_text:
-            return -1.0, ["Pregnancy exclusion — hard disqualifier"]
+            return -1.0, ["Pregnancy exclusion"]
 
-    # Exclusion criteria check
-    excluded, exc_reason = _check_exclusion_criteria(
-        patient, trial.get("exclusion_criteria", [])
-    )
+    excluded, exc_reason = _check_exclusion_criteria(patient, trial.get("exclusion_criteria", []))
     if excluded:
         return -1.0, [f"Hard exclusion: {exc_reason}"]
 
-    # ── Age eligibility ───────────────────────────────────────────────────────
     age_eligible, age_reason = _check_age_eligibility(
-        patient.get("age"),
-        trial.get("min_age", ""),
-        trial.get("max_age", "")
+        patient.get("age"), trial.get("min_age", ""), trial.get("max_age", "")
     )
     if not age_eligible:
         return -1.0, [f"Age ineligibility: {age_reason}"]
@@ -114,52 +180,43 @@ def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list[str]]:
         score += 1
         reasons.append(age_reason)
 
-    # ── Core disease relevance ────────────────────────────────────────────────
-    if "breast cancer" in summary or "breast" in summary:
-        if any(term in conditions for term in ["breast", "mammary"]):
-            score += SIGNAL_DISEASE_MATCH
-            reasons.append("Disease focus aligns (breast cancer)")
+    if ("breast cancer" in summary or "breast" in summary) and any(t in conditions for t in ["breast", "mammary"]):
+        score += SIGNAL_DISEASE_MATCH
+        reasons.append("Disease focus aligns")
 
-    # Malignancy check
     if "benign" not in summary:
         score += SIGNAL_MALIGNANCY
         reasons.append("Confirmed malignancy")
 
-    # Receptor matching
     receptors = patient.get("receptor_status", {})
-
     if receptors.get("HER2") != "unknown":
         her2_val = receptors["HER2"].lower()
-        if her2_val in trial_text or f"her2-{her2_val}" in trial_text or f"her2 {her2_val}" in trial_text:
+        if her2_val in trial_text:
             score += SIGNAL_RECEPTOR_MATCH
-            reasons.append(f"HER2 status ({receptors['HER2']}) matches trial criteria")
+            reasons.append(f"HER2 status matches")
 
     if receptors.get("ER") != "unknown":
         er_val = receptors["ER"].lower()
-        if er_val in trial_text or f"er-{er_val}" in trial_text:
+        if er_val in trial_text:
             score += SIGNAL_ER_MATCH
-            reasons.append(f"ER status ({receptors['ER']}) aligns with trial")
+            reasons.append(f"ER status aligns")
 
-    # Metastatic relevance
     if patient.get("metastatic") and "metastatic" in trial_text:
         score += SIGNAL_METASTATIC_MATCH
-        reasons.append("Metastatic disease aligns with trial population")
+        reasons.append("Metastatic disease aligns")
 
-    # Age signal
     if patient.get("age") != "unknown":
         score += SIGNAL_AGE_AVAILABLE
-        reasons.append("Age information available for eligibility check")
 
-    # Triple-negative specific matching
     if all(receptors.get(r) == "negative" for r in ["ER", "PR", "HER2"]):
         if "triple negative" in trial_text or "tnbc" in trial_text:
             score += 2
             reasons.append("Triple-negative profile matches TNBC trial")
 
-    normalized = score / max_possible if max_possible > 0 else 0.0
-    return min(normalized, 1.0), reasons
+    return min(score / max_possible, 1.0), reasons
 
 
+# ── Main scoring function ─────────────────────────────────────────────────────
 def score_patient_trial(
     patient: dict,
     trial: dict,
@@ -168,22 +225,14 @@ def score_patient_trial(
     trial_entities: dict = None,
 ) -> dict:
     """
-    Compute composite score combining all three signals.
+    Compute composite score using semantic similarity + cross-encoder.
 
-    Args:
-        patient: Parsed patient profile
-        trial: Trial dict with conditions, interventions, etc.
-        semantic_similarity: Cosine similarity from embedding search (0-1)
-        patient_entities: Pre-extracted clinical entities from patient text
-        trial_entities: Pre-extracted clinical entities from trial text
-
-    Returns:
-        dict with composite_score, match_percentage, component scores, and reasons
+    The cross-encoder replaces NER string overlap scoring.
+    It reads the patient summary and trial eligibility text as a pair
+    and scores semantic relevance directly — no entity normalization needed.
     """
-    # 1. Rule-based score
+    # Stage 1: Rule-based hard filter
     rule_score, rule_reasons = compute_rule_score(patient, trial)
-
-    # Hard exclusion
     if rule_score < 0:
         return {
             "trial_id": trial.get("trial_id", ""),
@@ -192,67 +241,46 @@ def score_patient_trial(
             "match_percentage": 0.0,
             "semantic_score": semantic_similarity,
             "rule_score": 0.0,
-            "ner_score": 0.0,
+            "cross_encoder_score": 0.0,
             "reasons": rule_reasons,
             "excluded": True,
         }
 
-    # 2. NER entity overlap score
-    ner_score = 0.0
-    ner_reasons = []
-    if patient_entities and trial_entities:
-        ner_score = compute_entity_overlap(patient_entities, trial_entities)
-        if ner_score > 0.3:
-            # Find which entities overlapped
-            p_bio = set(b.lower() for b in patient_entities.get("biomarkers", []))
-            t_bio = set(b.lower() for b in trial_entities.get("biomarkers", []))
-            shared_bio = p_bio & t_bio
-            if shared_bio:
-                ner_reasons.append(f"Shared biomarkers: {', '.join(shared_bio)}")
+    # Stage 2: Cross-encoder semantic relevance scoring
+    patient_summary = patient.get("raw_summary", "")
+    ce_score = compute_cross_encoder_score(patient_summary, trial)
 
-            p_treat = set(t.lower() for t in patient_entities.get("treatments", []))
-            t_treat = set(t.lower() for t in trial_entities.get("treatments", []))
-            shared_treat = p_treat & t_treat
-            if shared_treat:
-                ner_reasons.append(f"Treatment overlap: {', '.join(shared_treat)}")
+    # Stage 3: Composite score
+    composite = (semantic_similarity * SEMANTIC_WEIGHT) + (ce_score * CROSS_ENCODER_WEIGHT)
 
-    # 3. Composite score
-    composite = (
-        (semantic_similarity * SEMANTIC_WEIGHT) +
-        (rule_score * RULE_WEIGHT) +
-        (ner_score * NER_WEIGHT)
-    )
-
-    # Combine all reasons
-    all_reasons = rule_reasons + ner_reasons
+    all_reasons = rule_reasons.copy()
     if semantic_similarity > 0.5:
-        all_reasons.insert(0, f"High semantic similarity ({semantic_similarity:.0%}) to patient profile")
+        all_reasons.insert(0, f"High semantic similarity ({semantic_similarity:.0%})")
+    if ce_score > 0.6:
+        all_reasons.insert(0, f"Strong eligibility alignment ({ce_score:.0%})")
 
     return {
-        "trial_id": trial.get("trial_id", ""),
-        "title": trial.get("title", ""),
-        "conditions": trial.get("conditions", ""),
-        "interventions": trial.get("interventions", ""),
-        "status": trial.get("status", ""),
-        "composite_score": round(composite, 4),
-        "match_percentage": round(composite * 100, 1),
-        "semantic_score": round(semantic_similarity, 4),
-        "rule_score": round(rule_score, 4),
-        "ner_score": round(ner_score, 4),
-        "reasons": all_reasons,
-        "excluded": False,
+        "trial_id":            trial.get("trial_id", ""),
+        "title":               trial.get("title", ""),
+        "conditions":          trial.get("conditions", ""),
+        "interventions":       trial.get("interventions", ""),
+        "status":              trial.get("status", ""),
+        "composite_score":     round(composite, 4),
+        "match_percentage":    round(composite * 100, 1),
+        "semantic_score":      round(semantic_similarity, 4),
+        "rule_score":          round(rule_score, 4),
+        "cross_encoder_score": round(ce_score, 4),
+        "reasons":             all_reasons,
+        "excluded":            False,
     }
 
 
-def rank_trials(scored_trials: list[dict], top_k: int = 10) -> list[dict]:
+def rank_trials(scored_trials: list, top_k: int = 10) -> list:
     """Sort trials by composite score and return top K matches."""
-    valid = [t for t in scored_trials if not t.get("excluded")]
+    valid  = [t for t in scored_trials if not t.get("excluded")]
     ranked = sorted(valid, key=lambda x: x["composite_score"], reverse=True)
-
-    # Normalize match percentages relative to best match
     if ranked:
         best = ranked[0]["composite_score"]
         for t in ranked:
             t["match_percentage"] = round((t["composite_score"] / best) * 100, 1) if best > 0 else 0.0
-
     return ranked[:top_k]

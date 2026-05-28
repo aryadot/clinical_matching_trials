@@ -1,17 +1,21 @@
 """
-evaluate_llm_judge.py — LLM-as-Judge Evaluation for Clinical Trial Navigator
+evaluate_llm_judge.py — LLM-as-Reranker Evaluation for Clinical Trial Navigator
 
-Uses Llama 4 Scout via Groq as an independent external evaluator to assess:
-  - Clinical Relevance  : How clinically appropriate is this trial for the patient? (1-5)
-  - Eligibility Alignment: How well does the patient meet trial eligibility criteria? (1-5)
+Redesigned evaluation: instead of scoring each trial independently, the LLM
+sees ALL top-20 retrieved trials simultaneously and ranks them from most to least
+relevant for the patient. This produces relative judgments within the available
+options rather than absolute clinical quality scores against an imaginary ideal trial.
 
-This complements existing retrieval metrics (MRR 0.75, Precision@5 0.77) with
-qualitative clinical accuracy scoring. The LLM judge has no access to the pipeline's
-internal scoring — avoiding self-evaluation bias inherent in LLM-evaluates-LLM setups.
+This mirrors how production clinical AI systems use LLMs for evaluation — the
+question is not "is this a perfect match?" but "given these options, which are
+the best matches for this patient?"
 
-Usage:
-    export GROQ_API_KEY=your_key_here
-    python evaluate_llm_judge.py
+Metrics reported:
+  - Rank correlation between LLM ranking and pipeline ranking (Spearman)
+  - Agreement@k: how often LLM top-k overlaps with pipeline top-k
+  - Per-patient LLM top trial with reasoning
+
+
 """
 
 import json
@@ -28,72 +32,67 @@ from pipeline.scorer import score_patient_trial, rank_trials
 from pipeline.parser import parse_patient
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TOP_K = 5           # Number of top retrieved trials to judge per patient
-SLEEP_BETWEEN = 0.5 # Seconds between Groq calls to respect rate limits
-MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+TOP_K_RETRIEVE = 20   # Show LLM all top 20 trials
+TOP_K_REPORT   = 5    # Report agreement on top 5
+SLEEP_BETWEEN  = 1.0  # Seconds between Groq calls
+MODEL          = "meta-llama/llama-4-scout-17b-16e-instruct"
 
-# ── Judge Prompt ──────────────────────────────────────────────────────────────
-JUDGE_PROMPT = """You are a clinical oncology expert reviewing whether a breast cancer clinical trial is appropriate for a specific patient.
+# ── Reranker Prompt ───────────────────────────────────────────────────────────
+RERANKER_PROMPT = """You are a clinical oncology expert. A patient matching system has retrieved {n_trials} breast cancer clinical trials as potential matches for the following patient. These are the ONLY available trials in the database.
 
 Patient Profile:
 {patient_summary}
 
-Clinical Trial:
-Title: {trial_title}
-Conditions: {trial_conditions}
-Interventions: {trial_interventions}
-Eligibility Criteria: {trial_eligibility}
+Retrieved Clinical Trials:
+{trial_list}
 
-Evaluate this patient-trial match on two dimensions:
+Your task: Rank these {n_trials} trials from most to least clinically appropriate for this patient, considering both clinical relevance and likely eligibility. These are the only options available — rank them relative to each other.
 
-1. Clinical Relevance (1-5): How clinically appropriate is this trial for the patient's condition?
-   1 = Not relevant at all
-   2 = Marginally relevant
-   3 = Moderately relevant
-   4 = Highly relevant
-   5 = Perfect clinical match
-
-2. Eligibility Alignment (1-5): How well does this patient appear to meet the trial's eligibility criteria?
-   1 = Clearly ineligible
-   2 = Likely ineligible
-   3 = Uncertain eligibility
-   4 = Likely eligible
-   5 = Clearly eligible
-
-Important: You are providing a qualitative clinical assessment only.
-Final eligibility determinations require full clinical review by a qualified physician.
+For your top 3 ranked trials, provide a one-sentence reasoning.
 
 Respond in this exact JSON format with no extra text:
 {{
-  "clinical_relevance": <integer 1-5>,
-  "eligibility_alignment": <integer 1-5>,
-  "reasoning": "<one concise sentence>"
-}}"""
+  "ranking": [<trial_number_1>, <trial_number_2>, ..., <trial_number_{n_trials}>],
+  "reasoning": {{
+    "1": "<one sentence for your #1 choice>",
+    "2": "<one sentence for your #2 choice>",
+    "3": "<one sentence for your #3 choice>"
+  }}
+}}
+
+Where ranking is a list of trial numbers (1 to {n_trials}) ordered from best to worst match."""
 
 
 # ── Groq Client ───────────────────────────────────────────────────────────────
 def get_groq_client() -> OpenAI:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
-        raise ValueError(
-            "GROQ_API_KEY environment variable not set.\n"
-            "Run: export GROQ_API_KEY=your_key_here"
-        )
+        raise ValueError("GROQ_API_KEY not set. Run: export GROQ_API_KEY=your_key_here")
     return OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
 
-# ── LLM Judge ────────────────────────────────────────────────────────────────
-def evaluate_with_llm(client: OpenAI, patient_summary: str, trial: dict) -> dict | None:
+# ── LLM Reranker ──────────────────────────────────────────────────────────────
+def rerank_with_llm(client: OpenAI, patient_summary: str, trials: list) -> dict | None:
     """
-    Send a single patient-trial pair to Llama 4 Scout for clinical quality assessment.
-    Returns dict with clinical_relevance, eligibility_alignment, reasoning — or None on error.
+    Show LLM all retrieved trials simultaneously and ask for relative ranking.
+    Returns dict with ranking list and reasoning for top 3.
     """
-    prompt = JUDGE_PROMPT.format(
-        patient_summary=patient_summary,
-        trial_title=trial.get("title", "N/A"),
-        trial_conditions=trial.get("conditions", "N/A"),
-        trial_interventions=trial.get("interventions", "N/A"),
-        trial_eligibility=(trial.get("eligibility", "N/A") or "N/A")[:600]
+    # Build numbered trial list
+    trial_list_text = ""
+    for i, trial in enumerate(trials, 1):
+        eligibility = (trial.get("eligibility", "") or "")[:300]
+        trial_list_text += (
+            f"\nTrial {i}:\n"
+            f"  Title: {trial.get('title', 'N/A')[:80]}\n"
+            f"  Conditions: {trial.get('conditions', 'N/A')[:100]}\n"
+            f"  Interventions: {trial.get('interventions', 'N/A')[:100]}\n"
+            f"  Eligibility (excerpt): {eligibility}\n"
+        )
+
+    prompt = RERANKER_PROMPT.format(
+        n_trials=len(trials),
+        patient_summary=patient_summary[:400],
+        trial_list=trial_list_text,
     )
 
     try:
@@ -101,21 +100,48 @@ def evaluate_with_llm(client: OpenAI, patient_summary: str, trial: dict) -> dict
             model=MODEL,
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
-            max_tokens=250,
+            max_tokens=800,
             response_format={"type": "json_object"}
         )
         result = json.loads(response.choices[0].message.content)
-        return {
-            "clinical_relevance":    max(1, min(5, int(result.get("clinical_relevance", 0)))),
-            "eligibility_alignment": max(1, min(5, int(result.get("eligibility_alignment", 0)))),
-            "reasoning":             result.get("reasoning", "").strip()
-        }
+        ranking  = result.get("ranking", [])
+        reasoning = result.get("reasoning", {})
+
+        # Validate ranking is a permutation of 1..n
+        expected = set(range(1, len(trials) + 1))
+        if set(ranking) != expected:
+            return None
+
+        return {"ranking": ranking, "reasoning": reasoning}
+
     except Exception as e:
         print(f"    [LLM error] {e}")
         return None
 
 
-# ── Data Loading ──────────────────────────────────────────────────────────────
+# ── Spearman rank correlation ─────────────────────────────────────────────────
+def spearman_correlation(rank1: list, rank2: list) -> float:
+    """Compute Spearman rank correlation between two rankings."""
+    n = len(rank1)
+    if n < 2:
+        return 1.0
+    d_sq = sum((r1 - r2) ** 2 for r1, r2 in zip(rank1, rank2))
+    return 1 - (6 * d_sq) / (n * (n ** 2 - 1))
+
+
+# ── Agreement@k ──────────────────────────────────────────────────────────────
+def agreement_at_k(llm_ranking: list, k: int) -> float:
+    """
+    Fraction of LLM top-k trials that also appear in pipeline top-k.
+    Pipeline top-k is trials[0:k] since they are already ranked by composite score.
+    LLM ranking is 1-indexed trial numbers.
+    """
+    pipeline_top_k = set(range(1, k + 1))  # Trials 1..k are pipeline top-k
+    llm_top_k      = set(llm_ranking[:k])
+    return len(pipeline_top_k & llm_top_k) / k
+
+
+# ── Data loading ──────────────────────────────────────────────────────────────
 def load_data():
     base = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(base, "data/patients/synthetic_patients.json")) as f:
@@ -132,19 +158,19 @@ def load_data():
 
 
 # ── Retrieval ─────────────────────────────────────────────────────────────────
-def retrieve_top_k(raw_patient: dict, trials_lookup: dict, collection, top_k: int = TOP_K):
-    parsed = parse_patient(raw_patient)
-    query_text = parsed.get("raw_summary", raw_patient.get("summary", ""))
+def retrieve_top_k(raw_patient, trials_lookup, collection, top_k=TOP_K_RETRIEVE):
+    parsed          = parse_patient(raw_patient)
+    query_text      = parsed.get("raw_summary", raw_patient.get("summary", ""))
     patient_entities = extract_clinical_entities(query_text)
-    candidates = semantic_search(query_text, collection, top_k=50)
-
+    candidates      = semantic_search(query_text, collection, top_k=50)
     scored = []
     for c in candidates:
         trial = trials_lookup.get(c["trial_id"])
         if not trial:
             continue
-        trial_text = f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
-        trial_entities = extract_clinical_entities(trial_text)
+        trial_entities = extract_clinical_entities(
+            f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
+        )
         result = score_patient_trial(
             patient=parsed, trial=trial,
             semantic_similarity=c["similarity"],
@@ -152,14 +178,13 @@ def retrieve_top_k(raw_patient: dict, trials_lookup: dict, collection, top_k: in
             trial_entities=trial_entities,
         )
         scored.append(result)
-
     ranked = rank_trials(scored, top_k=top_k)
-    return [r["trial_id"] for r in ranked]
+    return [trials_lookup[r["trial_id"]] for r in ranked if r["trial_id"] in trials_lookup]
 
 
-# ── Main Evaluation ───────────────────────────────────────────────────────────
+# ── Main evaluation ───────────────────────────────────────────────────────────
 def evaluate():
-    print("Loading patients and trials...")
+    print("Loading data...")
     raw_patients, trials = load_data()
 
     trials_lookup = {}
@@ -173,91 +198,101 @@ def evaluate():
         f"{t.get('conditions', '')} {t.get('interventions', '')} {t.get('eligibility', '')} {t.get('title', '')}"
         for t in trials
     ]
-    chroma_client = get_chroma_client()
+    client_chroma = get_chroma_client()
     index_trials(trials, trial_texts)
-    collection = get_collection(chroma_client)
+    collection = get_collection(client_chroma)
 
-    print(f"Initializing LLM judge: {MODEL} via Groq\n")
+    print(f"Initializing LLM reranker: {MODEL} via Groq\n")
     groq_client = get_groq_client()
 
-    all_relevance  = []
-    all_alignment  = []
-    patient_results = []
+    all_spearman     = []
+    all_agreement_1  = []
+    all_agreement_3  = []
+    all_agreement_5  = []
+    patient_results  = []
 
     for raw_p in raw_patients:
-        pid = raw_p["patient_id"]
+        pid     = raw_p["patient_id"]
         summary = raw_p.get("summary", "")
         print(f"── {pid} " + "─" * 40)
 
-        top_ids = retrieve_top_k(raw_p, trials_lookup, collection)
-        p_rel, p_align = [], []
-        trial_evals = []
+        top_trials = retrieve_top_k(raw_p, trials_lookup, collection)
+        if not top_trials:
+            print(f"  No trials retrieved, skipping")
+            continue
 
-        for trial_id in top_ids:
-            trial = trials_lookup.get(trial_id)
-            if not trial:
-                continue
+        print(f"  Retrieved {len(top_trials)} trials. Sending to LLM reranker...")
+        result = rerank_with_llm(groq_client, summary, top_trials)
+        time.sleep(SLEEP_BETWEEN)
 
-            print(f"  Judging {trial_id[:20]}...")
-            result = evaluate_with_llm(groq_client, summary, trial)
-            time.sleep(SLEEP_BETWEEN)
+        if not result:
+            print(f"  LLM reranking failed, skipping")
+            continue
 
-            if result:
-                p_rel.append(result["clinical_relevance"])
-                p_align.append(result["eligibility_alignment"])
-                trial_evals.append({
-                    "trial_id": trial_id,
-                    "title":    trial.get("title", "")[:80],
-                    **result
-                })
-                print(f"    Relevance {result['clinical_relevance']}/5 | "
-                      f"Alignment {result['eligibility_alignment']}/5 | "
-                      f"{result['reasoning']}")
+        llm_ranking = result["ranking"]
+        reasoning   = result["reasoning"]
 
-        if p_rel:
-            avg_r = sum(p_rel)   / len(p_rel)
-            avg_a = sum(p_align) / len(p_align)
-            all_relevance.extend(p_rel)
-            all_alignment.extend(p_align)
-            print(f"  Patient avg → Relevance {avg_r:.2f}/5 | Alignment {avg_a:.2f}/5")
-            patient_results.append({
-                "patient_id":              pid,
-                "summary_excerpt":         summary[:200],
-                "top_trials_evaluated":    trial_evals,
-                "avg_clinical_relevance":  round(avg_r, 2),
-                "avg_eligibility_alignment": round(avg_a, 2),
-            })
+        # Pipeline ranking is 1..n (already sorted by composite score)
+        pipeline_ranking = list(range(1, len(top_trials) + 1))
 
-    # ── Save Results ──────────────────────────────────────────────────────────
+        # Spearman correlation between pipeline and LLM ranking
+        spearman = spearman_correlation(pipeline_ranking, llm_ranking)
+        all_spearman.append(spearman)
+
+        # Agreement@k
+        agr1 = agreement_at_k(llm_ranking, 1)
+        agr3 = agreement_at_k(llm_ranking, min(3, len(top_trials)))
+        agr5 = agreement_at_k(llm_ranking, min(5, len(top_trials)))
+        all_agreement_1.append(agr1)
+        all_agreement_3.append(agr3)
+        all_agreement_5.append(agr5)
+
+        # LLM top choice
+        llm_top_idx  = llm_ranking[0] - 1
+        llm_top_trial = top_trials[llm_top_idx] if llm_top_idx < len(top_trials) else {}
+
+        print(f"  Spearman correlation: {spearman:.3f}")
+        print(f"  Agreement@1: {agr1:.0%} | @3: {agr3:.0%} | @5: {agr5:.0%}")
+        print(f"  LLM top choice: {llm_top_trial.get('trial_id', 'N/A')}")
+        print(f"  Reasoning: {reasoning.get('1', 'N/A')}")
+
+        patient_results.append({
+            "patient_id":        pid,
+            "summary_excerpt":   summary[:200],
+            "n_trials_shown":    len(top_trials),
+            "spearman":          round(spearman, 3),
+            "agreement_at_1":    agr1,
+            "agreement_at_3":    agr3,
+            "agreement_at_5":    agr5,
+            "llm_top_trial":     llm_top_trial.get("trial_id", ""),
+            "llm_ranking":       llm_ranking,
+            "llm_reasoning":     reasoning,
+        })
+
+    # Save results
     base = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(base, "data/llm_judge_results.json")
+    output_path = os.path.join(base, "data/llm_reranker_results.json")
     with open(output_path, "w") as f:
         json.dump(patient_results, f, indent=2)
 
-    # ── Summary Report ────────────────────────────────────────────────────────
+    # Summary
     print("\n" + "=" * 55)
-    print("LLM-AS-JUDGE EVALUATION RESULTS")
+    print("LLM-AS-RERANKER EVALUATION RESULTS")
     print("=" * 55)
-    print(f"Judge model               : Llama 4 Scout (Groq)")
-    print(f"Patients evaluated        : {len(patient_results)}")
-    print(f"Trials judged per patient : Top {TOP_K}")
-    print(f"Total patient-trial pairs : {len(all_relevance)}")
+    print(f"Reranker model         : Llama 4 Scout (Groq)")
+    print(f"Patients evaluated     : {len(patient_results)}")
+    print(f"Trials shown per patient: Top {TOP_K_RETRIEVE}")
 
-    if all_relevance:
-        avg_r_global = sum(all_relevance) / len(all_relevance)
-        avg_a_global = sum(all_alignment) / len(all_alignment)
-        high_rel = sum(1 for s in all_relevance if s >= 4)
-        high_ali = sum(1 for s in all_alignment if s >= 4)
+    if all_spearman:
+        print(f"\nAvg Spearman correlation : {sum(all_spearman)/len(all_spearman):.3f}")
+        print(f"Agreement@1              : {sum(all_agreement_1)/len(all_agreement_1):.0%}")
+        print(f"Agreement@3              : {sum(all_agreement_3)/len(all_agreement_3):.0%}")
+        print(f"Agreement@5              : {sum(all_agreement_5)/len(all_agreement_5):.0%}")
 
-        print(f"\nAvg Clinical Relevance    : {avg_r_global:.2f} / 5.00")
-        print(f"Avg Eligibility Alignment : {avg_a_global:.2f} / 5.00")
-        print(f"High relevance (≥4/5)     : {high_rel}/{len(all_relevance)} pairs ({100*high_rel/len(all_relevance):.0f}%)")
-        print(f"High alignment (≥4/5)     : {high_ali}/{len(all_alignment)} pairs ({100*high_ali/len(all_alignment):.0f}%)")
-
-    print(f"\nFull results saved to     : data/llm_judge_results.json")
+    print(f"\nFull results saved to  : data/llm_reranker_results.json")
     print("=" * 55)
-    print("\nNote: Scores reflect qualitative clinical assessment by an independent")
-    print("LLM judge. Final eligibility determinations require physician review.")
+    print("\nNote: Rankings are relative — LLM selects best available matches")
+    print("from the retrieved set, not from all possible trials worldwide.")
 
 
 if __name__ == "__main__":
