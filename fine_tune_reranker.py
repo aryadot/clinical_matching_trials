@@ -8,10 +8,6 @@ This script fine tunes it on patient-trial pairs so it learns what makes
 a breast cancer trial actually relevant to a specific patient, instead of
 relying on generic semantic overlap.
 
-Labels come from the same rule based scorer used to build ground truth
-in evaluate_retrieval.py (compute_rule_score) Positive pairs are patient-trial matches the rule engine scores
-as relevant. Negative pairs are randomly sampled non matches.
-
 """
 
 import json
@@ -56,9 +52,10 @@ def trial_text(trial: dict) -> str:
 
 def build_training_pairs(patients, trials):
     """
-    Builds labeled (patient_summary, trial_text, label) pairs.
-    Label 1 = rule engine considers this trial relevant to the patient.
-    Label 0 = randomly sampled trial the rule engine does not consider relevant.
+    Builds labeled (patient_summary, trial_text, label) pairs for a given
+    set of patients. Label 1 = rule engine considers this trial relevant
+    to the patient. Label 0 = randomly sampled trial the rule engine does
+    not consider relevant.
     """
     pairs = []
 
@@ -96,16 +93,32 @@ def main():
     print("Loading patients and trials...")
     patients, trials = load_data()
 
-    print("\nBuilding labeled training pairs from rule based ground truth...")
-    pairs = build_training_pairs(patients, trials)
-    random.shuffle(pairs)
+    # Split at the PATIENT level, not the pair level. Splitting pairs directly
+    # would let the same patient show up in both train and test, so the model
+    # could partly memorize a patient's pattern instead of generalizing to
+    # patients it has never seen. Every pair for a given patient stays on
+    # one side of the split.
+    patient_ids = [p["patient_id"] for p in patients]
+    random.shuffle(patient_ids)
+    split_idx = int(len(patient_ids) * (1 - TEST_SPLIT))
+    train_ids = set(patient_ids[:split_idx])
+    test_ids = set(patient_ids[split_idx:])
 
-    split_idx = int(len(pairs) * (1 - TEST_SPLIT))
-    train_pairs = pairs[:split_idx]
-    test_pairs = pairs[split_idx:]
+    train_patients = [p for p in patients if p["patient_id"] in train_ids]
+    test_patients = [p for p in patients if p["patient_id"] in test_ids]
 
-    print(f"\nTotal pairs: {len(pairs)}")
-    print(f"Train: {len(train_pairs)}  Test: {len(test_pairs)}")
+    print(f"\nPatients: {len(patients)} total  |  Train: {len(train_patients)}  Test: {len(test_patients)}")
+    print(f"Test patient IDs (held out entirely from training): {sorted(test_ids)}")
+
+    print("\nBuilding training pairs...")
+    train_pairs = build_training_pairs(train_patients, trials)
+
+    print("\nBuilding test pairs...")
+    test_pairs = build_training_pairs(test_patients, trials)
+
+    random.shuffle(train_pairs)
+
+    print(f"\nTotal train pairs: {len(train_pairs)}  Total test pairs: {len(test_pairs)}")
 
     print(f"\nLoading base model: {BASE_MODEL}")
     model = CrossEncoder(BASE_MODEL, num_labels=1)
@@ -126,6 +139,9 @@ def main():
 
     print(f"\nFine tuned model saved to {OUTPUT_DIR}")
     print("Update CROSS_ENCODER_MODEL in pipeline/scorer.py to this path to use it in the app.")
+    print("\nNext step: rerun evaluate_retrieval.py twice, once pointing at the pretrained")
+    print("model and once at the fine tuned model, and compare MRR and Precision@5 on the")
+    print("SAME held out test patients above. That before/after gap is your real result.")
 
 
 if __name__ == "__main__":
