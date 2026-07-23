@@ -1,17 +1,26 @@
 """
 evaluate_retrieval.py — Retrieval Quality Evaluation for Clinical Trial Navigator
 
-Architecture being evaluated:
-  Stage 1: ChromaDB semantic search retrieves top 50 candidates
-  Stage 2: Rule-based hard filters (age, exclusion criteria, pregnancy)
-  Stage 3: Cross-encoder BERT scores patient-trial pairs semantically
-  Stage 4: Composite ranking (semantic 0.35 + cross-encoder 0.65)
+Architecture being evaluated (matches pipeline/matcher.py, the live pipeline):
+  Strategy A: ChromaDB semantic search               -> List 1
+  Strategy B: Keyword/Entity overlap (Sørensen-Dice)  -> List 2
+  Stage 1:    Two-way Reciprocal Rank Fusion          -> Top-50 master list
+  Stage 2:    Rule-based hard-exclusion guardrail (age, exclusion criteria, pregnancy)
+  Stage 3:    Cross-encoder BERT scores survivors
+  Stage 4:    Dual-axis final RRF (master rank x cross-encoder rank)
+
+No weighted composite anywhere in this evaluation — matches the live app exactly.
 
 Metrics:
   MRR        — Mean Reciprocal Rank
   Precision@k — Fraction of top-k retrieved that are relevant
   Recall@k   — Fraction of all relevant trials captured in top-k
   NDCG@k     — Normalized Discounted Cumulative Gain
+
+NOTE ON GROUND TRUTH: "relevant" trials below are still defined by the
+same rule-based compute_rule_score() threshold used elsewhere in the
+pipeline — this evaluation checks internal consistency of the new
+architecture, not clinical correctness. See README "Known Limitations."
 """
 
 import json
@@ -21,9 +30,10 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from pipeline.embeddings import get_chroma_client, get_collection, index_trials, semantic_search
-from pipeline.ner import extract_clinical_entities
-from pipeline.scorer import score_patient_trial, rank_trials, compute_rule_score
+from pipeline.embeddings import get_chroma_client, get_collection, index_trials
+from pipeline.entity_search import build_trial_entity_index
+from pipeline.matcher import match_patient_to_trials
+from pipeline.scorer import compute_rule_score
 from pipeline.parser import parse_patient
 
 K_VALUES           = [1, 3, 5, 10]
@@ -66,27 +76,17 @@ def build_ground_truth(patients, trials):
     return ground_truth
 
 
-def retrieve_for_patient(patient, trials_lookup, collection, top_k=TOP_RETRIEVAL):
-    parsed      = parse_patient(patient)
-    query_text  = parsed.get("raw_summary", patient.get("summary", ""))
-    patient_entities = extract_clinical_entities(query_text)
-    candidates  = semantic_search(query_text, collection, top_k=top_k)
-    scored = []
-    for c in candidates:
-        trial = trials_lookup.get(c["trial_id"])
-        if not trial:
-            continue
-        trial_entities = extract_clinical_entities(
-            f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('eligibility', '')}"
-        )
-        result = score_patient_trial(
-            patient=parsed, trial=trial,
-            semantic_similarity=c["similarity"],
-            patient_entities=patient_entities,
-            trial_entities=trial_entities,
-        )
-        scored.append(result)
-    return [r["trial_id"] for r in rank_trials(scored, top_k=top_k)]
+def retrieve_for_patient(patient, trials_lookup, collection, trial_entity_index, top_k=TOP_RETRIEVAL):
+    """Run the actual live pipeline (matcher.match_patient_to_trials) for evaluation."""
+    trials = list(trials_lookup.values())
+    results = match_patient_to_trials(
+        patient=parse_patient(patient),
+        trials=trials,
+        collection=collection,
+        trial_entity_index=trial_entity_index,
+        top_k=top_k,
+    )
+    return [r["trial_id"] for r in results]
 
 
 def precision_at_k(retrieved, relevant, k):
@@ -128,6 +128,9 @@ def evaluate():
     index_trials(trials, trial_texts)
     collection = get_collection(client)
 
+    print("\nBuilding keyword/entity index (Strategy B)...")
+    trial_entity_index = build_trial_entity_index(trials)
+
     results   = {k: {"precision": [], "recall": [], "ndcg": []} for k in K_VALUES}
     mrr_scores = []
 
@@ -138,7 +141,7 @@ def evaluate():
         if not relevant:
             print(f"  {pid}: no relevant trials, skipping")
             continue
-        retrieved = retrieve_for_patient(raw_p, trials_lookup, collection)
+        retrieved = retrieve_for_patient(raw_p, trials_lookup, collection, trial_entity_index)
         rr        = reciprocal_rank(retrieved, relevant)
         mrr_scores.append(rr)
         for k in K_VALUES:

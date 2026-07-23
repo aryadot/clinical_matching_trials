@@ -2,7 +2,7 @@
 Clinical Trial Navigator — AI-Powered Trial Discovery
 ======================================================
 Matches patients to clinical trials using NLP: semantic embeddings,
-clinical NER, rule-based signals, and LLM-powered explanations.
+a fine-tuned BERT cross-encoder, rule-based hard filters, and LLM-powered explanations.
 """
 
 import os
@@ -65,8 +65,8 @@ st.markdown("""
     .pipeline-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem auto; font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.7rem; color: white; }
     .pipeline-icon-embed { background: linear-gradient(135deg, #0d9488, #14b8a6); }
     .pipeline-icon-embed::after { content: "VEC"; }
-    .pipeline-icon-ner { background: linear-gradient(135deg, #2563eb, #60a5fa); }
-    .pipeline-icon-ner::after { content: "CE"; }
+    .pipeline-icon-ce { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+    .pipeline-icon-ce::after { content: "CE"; }
     .pipeline-icon-llm { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
     .pipeline-icon-llm::after { content: "LLM"; }
     .section-icon { width: 24px; height: 24px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-weight: 700; font-size: 0.55rem; color: white; margin-right: 6px; vertical-align: middle; }
@@ -111,7 +111,7 @@ def _render_empty_state():
     </div>
     <div class="pipeline-cards" style="max-width: 700px; margin: 0 auto;">
         <div class="pipeline-card"><div class="pipeline-icon pipeline-icon-embed"></div><h4>Semantic Search</h4><p>Sentence-transformer embeddings find trials with similar clinical profiles via ChromaDB</p></div>
-        <div class="pipeline-card"><div class="pipeline-icon pipeline-icon-ner"></div><h4>Cross-Encoder Scoring</h4><p>BERT cross-encoder scores patient-trial pairs semantically — no string matching needed</p></div>
+        <div class="pipeline-card"><div class="pipeline-icon pipeline-icon-ce"></div><h4>Cross-Encoder Scoring</h4><p>BERT cross-encoder scores patient-trial pairs semantically — no string matching needed</p></div>
         <div class="pipeline-card"><div class="pipeline-icon pipeline-icon-llm"></div><h4>Criterion Checker</h4><p>LLM reviews each inclusion criterion against your profile and flags what to discuss with your oncologist</p></div>
     </div>
     """, unsafe_allow_html=True)
@@ -208,33 +208,28 @@ def display_eligibility_check(patient: dict, trial: dict):
 
 
 def run_matching(patient, trials, trial_texts, show_eligibility=False):
-    from pipeline.parser import build_patient_embedding_text
-    from pipeline.embeddings import index_trials, semantic_search
-    from pipeline.ner import extract_clinical_entities
-    from pipeline.scorer import score_patient_trial, rank_trials
+    from pipeline.embeddings import index_trials
+    from pipeline.entity_search import build_trial_entity_index
+    from pipeline.matcher import match_patient_to_trials
 
     progress = st.progress(0, "Indexing trials into vector store...")
     collection = index_trials(trials, trial_texts)
-    progress.progress(25, "Generating patient embedding...")
-    patient_text = build_patient_embedding_text(patient)
-    semantic_results = semantic_search(patient_text, collection, top_k=30)
-    progress.progress(50, "Scoring trials...")
-    patient_entities = extract_clinical_entities(patient["raw_summary"])
-    trial_lookup = {t["trial_id"]: t for t in trials}
-    scored = []
-    for i, match in enumerate(semantic_results):
-        trial = trial_lookup.get(match["trial_id"], {})
-        trial_text = f"{trial.get('conditions', '')} {trial.get('interventions', '')} {trial.get('title', '')}"
-        trial_entities = extract_clinical_entities(trial_text)
-        result = score_patient_trial(
-            patient=patient, trial=trial,
-            semantic_similarity=match["similarity"],
-            patient_entities=patient_entities, trial_entities=trial_entities,
-        )
-        scored.append(result)
-        progress.progress(50 + int((i / len(semantic_results)) * 40), "Scoring trials...")
-    top_matches = rank_trials(scored, top_k=10)
-    progress.progress(100, "Done!")
+
+    @st.cache_resource(show_spinner=False)
+    def _cached_entity_index(_trials_key):
+        return build_trial_entity_index(trials)
+
+    progress.progress(10, "Building keyword/entity index...")
+    trial_entity_index = _cached_entity_index(len(trials))
+
+    def _on_progress(pct, msg):
+        progress.progress(pct, msg)
+
+    top_matches = match_patient_to_trials(
+        patient=patient, trials=trials, collection=collection,
+        trial_entity_index=trial_entity_index, top_k=10,
+        on_progress=_on_progress,
+    )
     st.session_state.last_results = top_matches
     st.session_state.last_patient = patient["patient_id"]
     st.session_state.trial_chat_history = []
@@ -250,13 +245,13 @@ def display_results(patient, top_matches, show_eligibility=False):
     with s1:
         st.markdown(f'<div class="stat-card"><div class="stat-value">{len(top_matches)}</div><div class="stat-label">Matches Found</div></div>', unsafe_allow_html=True)
     with s2:
-        best = top_matches[0]["match_percentage"] if top_matches else 0
+        best = top_matches[0]["eligibility_pct"] if top_matches else 0
         st.markdown(f'<div class="stat-card"><div class="stat-value">{best}%</div><div class="stat-label">Best Match</div></div>', unsafe_allow_html=True)
     with s3:
         avg_sem = sum(t["semantic_score"] for t in top_matches) / len(top_matches) if top_matches else 0
         st.markdown(f'<div class="stat-card"><div class="stat-value">{avg_sem:.0%}</div><div class="stat-label">Avg Similarity</div></div>', unsafe_allow_html=True)
     with s4:
-        avg_ce = sum(t.get("cross_encoder_score", t.get("ner_score", 0)) for t in top_matches) / len(top_matches) if top_matches else 0
+        avg_ce = sum(t["cross_encoder_score"] for t in top_matches) / len(top_matches) if top_matches else 0
         st.markdown(f'<div class="stat-card"><div class="stat-value">{avg_ce:.0%}</div><div class="stat-label">Avg CE Score</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -265,16 +260,19 @@ def display_results(patient, top_matches, show_eligibility=False):
     with results_col:
         st.markdown('<div class="clinical-panel"><h3><span class="section-icon section-icon-trials"></span> Top Matching Trials</h3></div>', unsafe_allow_html=True)
         for i, trial in enumerate(top_matches):
-            pct = trial["match_percentage"]
+            pct = trial["eligibility_pct"]
             badge_class = "match-high" if pct >= 70 else "match-med" if pct >= 40 else "match-low"
             bar_color   = "#2ea043" if pct >= 70 else "#d29922" if pct >= 40 else "#8b949e"
             safe_title        = escape(trial.get("title", "Unknown Trial")[:120])
             safe_conditions   = escape(trial.get("conditions", "N/A")[:100])
             safe_interventions = escape(trial.get("interventions", "N/A")[:100])
             reasons_html = "".join(f'<div class="reason-item">• {escape(r)}</div>' for r in trial.get("reasons", [])[:4])
-            sem_pct  = int(trial["semantic_score"] * 100)
-            rule_pct = int(trial["rule_score"] * 100)
-            ce_pct   = int(trial.get("cross_encoder_score", trial.get("ner_score", 0)) * 100)
+            entities_html = ""
+            if trial.get("matched_entities"):
+                entities_html = f'<div class="reason-item">• Matched terms: {escape(", ".join(trial["matched_entities"][:6]))}</div>'
+            sem_pct   = int(trial["semantic_score"] * 100)
+            dice_pct  = int(trial["dice_score"] * 100)
+            ce_pct    = int(trial["cross_encoder_score"] * 100)
             st.markdown(f"""
             <div class="trial-card">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -286,12 +284,12 @@ def display_results(patient, top_matches, show_eligibility=False):
                     <div class="match-badge {badge_class}">{pct}%</div>
                 </div>
                 <div style="margin-top: 0.6rem; display: flex; gap: 1rem; font-size: 0.7rem; color: #8b949e;">
-                    <span>Semantic: {sem_pct}%</span><span>Rules: {rule_pct}%</span><span>Cross-Encoder: {ce_pct}%</span>
+                    <span>Semantic: {sem_pct}%</span><span>Keyword/Dice: {dice_pct}%</span><span>Cross-Encoder: {ce_pct}%</span>
                 </div>
                 <div style="background: rgba(255,255,255,0.05); height: 4px; border-radius: 2px; margin-top: 0.4rem;">
                     <div style="width: {pct}%; height: 100%; background: {bar_color}; border-radius: 2px;"></div>
                 </div>
-                <div style="margin-top: 0.5rem;">{reasons_html}</div>
+                <div style="margin-top: 0.5rem;">{reasons_html}{entities_html}</div>
             </div>
             """, unsafe_allow_html=True)
 

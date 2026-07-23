@@ -13,17 +13,15 @@ TRIALS_PARSED = DATA_DIR / "trials" / "parsed_trials.json"
 
 # ── Models ──
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-NER_MODEL = "en_core_web_sm"
 LLM_MODEL = "llama-3.3-70b-versatile"
 
 # ── ChromaDB ──
 CHROMA_COLLECTION = "clinical_trials"
 
-# ── Scoring Weights ──
-# Semantic similarity weight vs rule-based signals
-SEMANTIC_WEIGHT = 0.5       # Weight for embedding cosine similarity
-RULE_WEIGHT = 0.3           # Weight for rule-based clinical signals
-NER_WEIGHT = 0.2            # Weight for entity overlap score
+# NOTE: composite ranking weights (semantic 0.35 / cross-encoder 0.65) live
+# in pipeline/scorer.py, not here — that is the single source of truth.
+# Rule-based scoring below is used only as a hard-exclusion gate, never as
+# a weighted component of the composite score.
 
 # ── Rule-based signal scores (from original project, preserved) ──
 SIGNAL_DISEASE_MATCH = 2

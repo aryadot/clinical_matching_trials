@@ -1,0 +1,27 @@
+# Secrets — never commit these
+.env
+.env.*
+.streamlit/secrets.toml
+*api_key*
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ChromaDB local persistence (regenerated on run, can be large)
+chroma_db/
+*.sqlite3
+
+# Model download cache
+.cache/
+*.safetensors
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/

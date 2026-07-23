@@ -1,22 +1,20 @@
 """
-pipeline/scorer.py — Trial Scoring & Ranking
+pipeline/scorer.py — Trial Scoring Building Blocks
 ==============================================
-Architecture: spaCy entity extraction + BERT cross-encoder scoring
+Provides the two independently-usable scoring functions that
+pipeline/matcher.py combines via Reciprocal Rank Fusion (no weights):
 
-Two-stage pipeline:
-  Stage 1 — spaCy pattern matching extracts clinical entities fast and reliably.
-             Used for hard exclusion checks and display purposes.
+  compute_rule_score()          — deterministic hard-exclusion guardrail
+                                   (pregnancy, age, exclusion criteria) plus
+                                   inclusion-criteria-only biomarker phrase
+                                   matching (HER2/ER/metastatic/TNBC).
+                                   Returns -1.0 to hard-disqualify, else 0-1.
 
-  Stage 2 — BERT cross-encoder reads the full patient summary and trial
-             eligibility text as a pair and outputs a semantic relevance score.
-             Replaces string-level NER overlap which required entity normalization.
-             Cross-encoder never compares entity strings — it understands semantic
-             relationships between patient clinical picture and trial requirements.
+  compute_cross_encoder_score() — fine-tuned BERT cross-encoder relevance
+                                   score for a patient/trial pair (0-1).
 
-Composite score:
-  - Semantic similarity (ChromaDB embeddings): 0.35 weight
-  - Cross-encoder relevance score:             0.65 weight
-  - Rule-based checks: hard filters only (exclusions, age)
+This file does NOT combine these into a final ranking — that fusion lives
+entirely in pipeline/matcher.py via pipeline/rrf.py.
 
 Cross-encoder model: cross-encoder/ms-marco-MiniLM-L-6-v2
   Small (66MB), fast on CPU, strong semantic matching.
@@ -33,12 +31,8 @@ except ImportError:
 
 from config import (
     SIGNAL_DISEASE_MATCH, SIGNAL_MALIGNANCY, SIGNAL_RECEPTOR_MATCH,
-    SIGNAL_METASTATIC_MATCH, SIGNAL_AGE_AVAILABLE, SIGNAL_ER_MATCH,
+    SIGNAL_METASTATIC_MATCH, SIGNAL_ER_MATCH,
 )
-
-# ── Weights ───────────────────────────────────────────────────────────────────
-SEMANTIC_WEIGHT      = 0.35
-CROSS_ENCODER_WEIGHT = 0.65
 
 CROSS_ENCODER_MODEL  = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 _cross_encoder_cache = None
@@ -76,19 +70,23 @@ def compute_cross_encoder_score(patient_summary: str, trial: dict) -> float:
     Returns normalized score 0.0 to 1.0.
     """
     try:
-        # Build focused trial text — title + conditions + inclusion criteria
+        # Build focused trial text — title + conditions + inclusion criteria.
+        # Uses the pre-parsed inclusion_criteria field (same source of truth
+        # as compute_rule_score) instead of string-searching the raw
+        # eligibility blob for "inclusion criteria"/"exclusion criteria"
+        # markers, which silently falls back to the ENTIRE blob (including
+        # exclusion text) if a trial's formatting doesn't match those exact
+        # marker phrases.
         trial_text = f"{trial.get('title', '')}. {trial.get('conditions', '')}."
-        eligibility = trial.get("eligibility", "") or ""
-
-        # Extract inclusion criteria section for focused matching
-        inc_idx = eligibility.lower().find("inclusion criteria")
-        exc_idx = eligibility.lower().find("exclusion criteria")
-        if inc_idx != -1 and exc_idx != -1:
-            inc_text = eligibility[inc_idx:exc_idx][:500]
-        elif inc_idx != -1:
-            inc_text = eligibility[inc_idx:][:500]
-        else:
-            inc_text = eligibility[:500]
+        inclusion_list = trial.get("inclusion_criteria", []) or []
+        inc_text = " ".join(inclusion_list)[:500]
+        if not inc_text:
+            # Genuine fallback: no parsed inclusion list at all for this
+            # trial. Use the eligibility blob capped before any exclusion
+            # marker, rather than assuming markers exist.
+            eligibility = trial.get("eligibility", "") or ""
+            exc_idx = eligibility.lower().find("exclusion criteria")
+            inc_text = (eligibility[:exc_idx] if exc_idx != -1 else eligibility)[:500]
 
         trial_text = f"{trial_text} {inc_text}".strip()
 
@@ -146,6 +144,46 @@ def _check_exclusion_criteria(patient: dict, exclusion_criteria: list) -> tuple[
     return False, ""
 
 
+def _receptor_phrase_matches(biomarker: str, status: str, inclusion_text: str) -> bool:
+    """
+    Require the biomarker name AND its status to appear together as a
+    specific phrase (e.g. "her2 positive", "her2+", "estrogen receptor
+    negative") — never a bare "positive"/"negative" substring, which hits
+    over half the entire trial database regardless of actual fit (577/1046
+    trials contain "positive" somewhere; 683/1046 contain "negative").
+
+    Checked ONLY against inclusion_criteria text, never the combined
+    inclusion+exclusion blob — so a trial that EXCLUDES this status can
+    never be mistaken for a match just because the status word appears in
+    its exclusion language.
+
+    The bare "her2-" / "er-" shorthand (valid clinical notation for
+    negative status, e.g. "ER+ and HER2-") is matched via regex with a
+    negative lookahead so it does NOT match inside compound words like
+    "her2-positive", "her2-low", or "her2-directed" — verified against the
+    real trial data: the naive substring version falsely matched 231 of
+    1046 trials that were actually HER2-POSITIVE, not negative.
+    """
+    status = status.lower()
+    biomarker = biomarker.lower()
+
+    patterns = [f"{biomarker} {status}", f"{biomarker}-{status}"]
+    if biomarker == "er":
+        patterns += [f"estrogen receptor {status}", f"estrogen receptor-{status}"]
+
+    if any(p in inclusion_text for p in patterns):
+        return True
+
+    if status == "positive":
+        return f"{biomarker}+" in inclusion_text
+    if status == "negative":
+        # "her2-" / "er-" only counts when NOT followed by another letter,
+        # so it can't match inside "her2-positive", "her2-low", etc.
+        return re.search(rf"\b{biomarker}-(?![a-z])", inclusion_text) is not None
+
+    return False
+
+
 def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list]:
     """
     Rule-based hard filter. Returns -1.0 on hard exclusion, 0-1 otherwise.
@@ -153,13 +191,22 @@ def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list]:
     """
     score = 0
     reasons = []
-    max_possible = 9
+    # max_possible = 8: age_reason(1) + disease(2) + malignancy(2) + HER2(2)
+    # + ER(1) + metastatic(1) + TNBC(2) = would be 11 if all fired, but disease
+    # match/malignancy/age are near-universal on a breast-cancer-only dataset —
+    # see README "Known Limitations". Duplicate age-available signal removed
+    # here (was double-counting the same fact as age_reason below).
+    max_possible = 8
 
     summary = patient.get("raw_summary", "").lower()
     conditions    = (trial.get("conditions", "")    or "").lower()
     interventions = (trial.get("interventions", "") or "").lower()
     eligibility   = (trial.get("eligibility", "")   or "").lower()
     trial_text    = f"{conditions} {interventions} {eligibility}"
+    # Inclusion-only text for biomarker/status matching — deliberately
+    # excludes exclusion_criteria, so a trial that EXCLUDES a status can't
+    # be mistaken for a match on that status. See _receptor_phrase_matches.
+    inclusion_text = " ".join(trial.get("inclusion_criteria", []) or []).lower()
 
     # Hard exclusions
     if patient.get("pregnant"):
@@ -190,97 +237,35 @@ def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list]:
 
     receptors = patient.get("receptor_status", {})
     if receptors.get("HER2") != "unknown":
-        her2_val = receptors["HER2"].lower()
-        if her2_val in trial_text:
+        if _receptor_phrase_matches("her2", receptors["HER2"], inclusion_text):
             score += SIGNAL_RECEPTOR_MATCH
-            reasons.append(f"HER2 status matches")
+            reasons.append("HER2 status matches")
 
     if receptors.get("ER") != "unknown":
-        er_val = receptors["ER"].lower()
-        if er_val in trial_text:
+        if _receptor_phrase_matches("er", receptors["ER"], inclusion_text):
             score += SIGNAL_ER_MATCH
-            reasons.append(f"ER status aligns")
+            reasons.append("ER status aligns")
 
-    if patient.get("metastatic") and "metastatic" in trial_text:
+    if patient.get("metastatic") and "metastatic" in inclusion_text:
         score += SIGNAL_METASTATIC_MATCH
         reasons.append("Metastatic disease aligns")
 
-    if patient.get("age") != "unknown":
-        score += SIGNAL_AGE_AVAILABLE
-
     if all(receptors.get(r) == "negative" for r in ["ER", "PR", "HER2"]):
-        if "triple negative" in trial_text or "tnbc" in trial_text:
+        if "triple negative" in inclusion_text or "tnbc" in inclusion_text:
             score += 2
             reasons.append("Triple-negative profile matches TNBC trial")
 
     return min(score / max_possible, 1.0), reasons
 
 
-# ── Main scoring function ─────────────────────────────────────────────────────
-def score_patient_trial(
-    patient: dict,
-    trial: dict,
-    semantic_similarity: float,
-    patient_entities: dict = None,
-    trial_entities: dict = None,
-) -> dict:
-    """
-    Compute composite score using semantic similarity + cross-encoder.
-
-    The cross-encoder replaces NER string overlap scoring.
-    It reads the patient summary and trial eligibility text as a pair
-    and scores semantic relevance directly — no entity normalization needed.
-    """
-    # Stage 1: Rule-based hard filter
-    rule_score, rule_reasons = compute_rule_score(patient, trial)
-    if rule_score < 0:
-        return {
-            "trial_id": trial.get("trial_id", ""),
-            "title": trial.get("title", ""),
-            "composite_score": 0.0,
-            "match_percentage": 0.0,
-            "semantic_score": semantic_similarity,
-            "rule_score": 0.0,
-            "cross_encoder_score": 0.0,
-            "reasons": rule_reasons,
-            "excluded": True,
-        }
-
-    # Stage 2: Cross-encoder semantic relevance scoring
-    patient_summary = patient.get("raw_summary", "")
-    ce_score = compute_cross_encoder_score(patient_summary, trial)
-
-    # Stage 3: Composite score
-    composite = (semantic_similarity * SEMANTIC_WEIGHT) + (ce_score * CROSS_ENCODER_WEIGHT)
-
-    all_reasons = rule_reasons.copy()
-    if semantic_similarity > 0.5:
-        all_reasons.insert(0, f"High semantic similarity ({semantic_similarity:.0%})")
-    if ce_score > 0.6:
-        all_reasons.insert(0, f"Strong eligibility alignment ({ce_score:.0%})")
-
-    return {
-        "trial_id":            trial.get("trial_id", ""),
-        "title":               trial.get("title", ""),
-        "conditions":          trial.get("conditions", ""),
-        "interventions":       trial.get("interventions", ""),
-        "status":              trial.get("status", ""),
-        "composite_score":     round(composite, 4),
-        "match_percentage":    round(composite * 100, 1),
-        "semantic_score":      round(semantic_similarity, 4),
-        "rule_score":          round(rule_score, 4),
-        "cross_encoder_score": round(ce_score, 4),
-        "reasons":             all_reasons,
-        "excluded":            False,
-    }
-
-
-def rank_trials(scored_trials: list, top_k: int = 10) -> list:
-    """Sort trials by composite score and return top K matches."""
-    valid  = [t for t in scored_trials if not t.get("excluded")]
-    ranked = sorted(valid, key=lambda x: x["composite_score"], reverse=True)
-    if ranked:
-        best = ranked[0]["composite_score"]
-        for t in ranked:
-            t["match_percentage"] = round((t["composite_score"] / best) * 100, 1) if best > 0 else 0.0
-    return ranked[:top_k]
+# ── Note ──────────────────────────────────────────────────────────────────────
+# The old weighted-composite functions (score_patient_trial / rank_trials,
+# 0.35 semantic + 0.65 cross-encoder) were removed here. They were only ever
+# called by evaluate_llm_judge.py, which has also been removed — that script
+# compared this pipeline against an independent LLM ranking and found weak
+# agreement (Spearman ~0.22, Agreement@1 = 0%), which we concluded wasn't a
+# reliable evaluation method since neither side was validated against real
+# ground truth. The live matching path is entirely in pipeline/matcher.py,
+# which combines compute_rule_score() and compute_cross_encoder_score()
+# below via Reciprocal Rank Fusion (pipeline/rrf.py) — no hand-picked
+# weights anywhere in the current live pipeline.
