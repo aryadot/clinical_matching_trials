@@ -81,6 +81,15 @@ st.markdown("""
     header {visibility: hidden;}
     .stButton > button[kind="primary"] { background: #0d9488 !important; border: none !important; border-radius: 10px !important; font-family: 'Source Sans 3', sans-serif !important; font-weight: 600 !important; }
     .stButton > button[kind="primary"]:hover { background: #0f766e !important; }
+
+    /* Chat widgets (st.chat_input / st.chat_message) default to dark-theme
+       text colors, which are invisible on this app's light background —
+       force readable colors explicitly. */
+    [data-testid="stChatInput"] textarea { color: #0f172a !important; }
+    [data-testid="stChatInput"] textarea::placeholder { color: #94a3b8 !important; opacity: 1 !important; }
+    [data-testid="stChatInput"] { background: #ffffff !important; border: 1px solid #e2e8f0 !important; }
+    [data-testid="stChatMessage"] { background: #ffffff !important; border: 1px solid #e2e8f0 !important; border-radius: 10px !important; }
+    [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] div { color: #1e293b !important; }
 </style>
 """, unsafe_allow_html=True)
 
