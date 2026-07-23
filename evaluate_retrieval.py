@@ -37,7 +37,12 @@ from pipeline.scorer import compute_rule_score
 from pipeline.parser import parse_patient
 
 K_VALUES           = [1, 3, 5, 10]
-RELEVANCE_THRESHOLD = 0.55
+# Generic signals alone (disease match + malignancy + age-known) cap at
+# 5/8 = 0.625 on this breast-cancer-only dataset — see pipeline/scorer.py.
+# Threshold set above that ceiling so a trial can ONLY count as "relevant"
+# if at least one real patient-specific signal (HER2/ER/metastatic/TNBC
+# match) also fires, not generic topical relevance alone.
+RELEVANCE_THRESHOLD = 0.7
 TOP_RETRIEVAL      = 50
 
 

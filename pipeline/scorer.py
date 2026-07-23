@@ -258,14 +258,3 @@ def compute_rule_score(patient: dict, trial: dict) -> tuple[float, list]:
     return min(score / max_possible, 1.0), reasons
 
 
-# ── Note ──────────────────────────────────────────────────────────────────────
-# The old weighted-composite functions (score_patient_trial / rank_trials,
-# 0.35 semantic + 0.65 cross-encoder) were removed here. They were only ever
-# called by evaluate_llm_judge.py, which has also been removed — that script
-# compared this pipeline against an independent LLM ranking and found weak
-# agreement (Spearman ~0.22, Agreement@1 = 0%), which we concluded wasn't a
-# reliable evaluation method since neither side was validated against real
-# ground truth. The live matching path is entirely in pipeline/matcher.py,
-# which combines compute_rule_score() and compute_cross_encoder_score()
-# below via Reciprocal Rank Fusion (pipeline/rrf.py) — no hand-picked
-# weights anywhere in the current live pipeline.

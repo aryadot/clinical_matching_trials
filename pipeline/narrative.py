@@ -30,7 +30,7 @@ Trial: {trial.get('title', '')}
 Conditions: {trial.get('conditions', '')}
 Interventions: {trial.get('interventions', '')}
 
-Match Score: {score_details.get('match_percentage', 0)}%
+Match Score: {score_details.get('eligibility_pct', 0)}%
 Key Reasons: {', '.join(score_details.get('reasons', [])[:4])}"""
 
         response = client.chat.completions.create(
@@ -51,8 +51,9 @@ def _fallback_explanation(patient, trial, score_details):
     reasons_text = "; ".join(reasons[:3]) if reasons else "General disease area relevance"
     return (
         f"This trial ({trial.get('title', 'Unknown')[:80]}...) was matched based on: {reasons_text}. "
-        f"The composite relevance score is {score_details.get('match_percentage', 0)}%, "
-        f"combining semantic similarity, clinical signal matching, and entity overlap analysis."
+        f"The final eligibility score is {score_details.get('eligibility_pct', 0)}%, "
+        f"combining semantic similarity, keyword/entity overlap, and cross-encoder relevance — "
+        f"fused via Reciprocal Rank Fusion rather than fixed weights."
     )
 
 
@@ -73,7 +74,7 @@ def chat_with_context(question: str, patient: dict, top_trials: list[dict]) -> s
                 f"\n{i}. {t['title'][:100]}"
                 f"\n   Conditions: {t.get('conditions', 'N/A')}"
                 f"\n   Interventions: {t.get('interventions', 'N/A')}"
-                f"\n   Match: {t['match_percentage']}%"
+                f"\n   Match: {t.get('eligibility_pct', 0)}%"
                 f"\n   Reasons: {', '.join(t.get('reasons', [])[:3])}\n"
             )
 
