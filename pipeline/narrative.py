@@ -67,20 +67,35 @@ def chat_with_context(question: str, patient: dict, top_trials: list[dict]) -> s
         from groq import Groq
         client = Groq(api_key=api_key)
 
-        # Build context from top matches
+        # Build context from top matches — include the FULL score breakdown
+        # (semantic, Dice, cross-encoder, RRF) so the chat can actually answer
+        # questions about individual numbers shown on the trial cards, not
+        # just the final eligibility %.
         trials_context = ""
         for i, t in enumerate(top_trials[:5], 1):
             trials_context += (
                 f"\n{i}. {t['title'][:100]}"
                 f"\n   Conditions: {t.get('conditions', 'N/A')}"
                 f"\n   Interventions: {t.get('interventions', 'N/A')}"
-                f"\n   Match: {t.get('eligibility_pct', 0)}%"
+                f"\n   Final eligibility score: {t.get('eligibility_pct', 0)}%"
+                f"\n   Score breakdown: Semantic similarity {t.get('semantic_score', 0):.0%}, "
+                f"Keyword/Dice overlap {t.get('dice_score', 0):.0%}, "
+                f"Cross-encoder relevance {t.get('cross_encoder_score', 0):.0%}"
                 f"\n   Reasons: {', '.join(t.get('reasons', [])[:3])}\n"
             )
 
         system = f"""You are a clinical trial matching assistant. You have access to a patient profile and their top matched clinical trials.
 Answer questions using ONLY this data. Be concise and clinician-friendly.
 NEVER make eligibility determinations or medical recommendations. Frame everything as relevance analysis.
+
+Score meanings, for context when asked about a specific number:
+- Semantic similarity: how topically similar the patient's overall profile is to the trial's description (embedding-based).
+- Keyword/Dice overlap: exact clinical-term overlap between patient and trial (biomarkers, stage, treatments).
+- Cross-encoder relevance: a model that reads the patient summary and trial's inclusion criteria together and
+  scores how well they fit — a LOW cross-encoder score means the trial ranked here mainly on semantic or keyword
+  similarity rather than a close inclusion-criteria fit, which is a legitimate reason for a low percentage on
+  that specific component even if the trial's overall rank is reasonable. Do not guess a specific numeric cause
+  beyond what's stated here — if the data doesn't explain WHY a score is a particular value, say so plainly.
 
 Patient Profile:
 {patient['raw_summary'][:600]}
